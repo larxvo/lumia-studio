@@ -2,16 +2,23 @@
 Existing reviewed repository files take precedence. This never imports hosting identity or secrets.
 """
 from __future__ import annotations
-import hashlib, io, json, re, stat, sys, urllib.request, zipfile
+import hashlib, io, json, re, stat, sys, urllib.request, urllib.error, zipfile
 from pathlib import Path, PurePosixPath
 
 ORIGIN = 'https://luma-photo-studio.tuhaotp.chatgpt.site/'
 MANIFEST_SHA256 = '333ee131968d25e01572f271e951b4aed29e816375f90bfc851e3f573e7c2b9a'
 
+def open_source(relative, timeout):
+    request=urllib.request.Request(ORIGIN+relative,headers={'User-Agent':'Luma-Studio-Repository-Import/9.0 (https://github.com/larxvo/lumia-studio)'})
+    try: return urllib.request.urlopen(request,timeout=timeout)
+    except urllib.error.HTTPError as error:
+        print('Source transfer failed:',error.code,error.headers.get('Content-Type'),error.read(500).decode('utf-8','replace'))
+        raise
+
 def download(relative, size, digest):
     if not re.fullmatch(r'[A-Za-z0-9._/-]+', relative) or '..' in PurePosixPath(relative).parts:
         raise ValueError('Invalid asset path')
-    with urllib.request.urlopen(ORIGIN + relative, timeout=120) as response:
+    with open_source(relative,120) as response:
         data = response.read(size + 1)
     if len(data) != size or hashlib.sha256(data).hexdigest() != digest:
         raise ValueError('Asset integrity mismatch: ' + relative)
@@ -21,7 +28,7 @@ def main():
     root = Path.cwd()
     if (root / 'package.json').exists():
         print('Source already present; migration skipped.'); return
-    with urllib.request.urlopen(ORIGIN + 'assets/source-manifest.json', timeout=60) as response:
+    with open_source('assets/source-manifest.json',60) as response:
         manifest_bytes = response.read(1024*1024)
     if hashlib.sha256(manifest_bytes).hexdigest() != MANIFEST_SHA256:
         raise ValueError('Published source changed; refusing an unreviewed import.')
