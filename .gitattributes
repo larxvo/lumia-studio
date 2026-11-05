@@ -1,0 +1,11 @@
+* text=auto
+*.onnx -text
+*.part* -text
+*.wasm -text
+*.png -text
+*.jpg -text
+*.webp -text
+*.woff2 -text
+*.ico -text
+*.icc -text
+*.zip -text

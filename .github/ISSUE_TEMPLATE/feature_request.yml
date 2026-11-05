@@ -1,0 +1,21 @@
+name: Feature request
+description: Describe a user task and a reviewable improvement.
+title: "[Feature]: "
+body:
+  - type: textarea
+    id: task
+    attributes:
+      label: User task or problem
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: What a successful result should do
+      description: "Include relevant file formats, quality expectations and a non-sensitive example."
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Hardware, compatibility or workflow constraints

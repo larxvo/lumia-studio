@@ -1,0 +1,128 @@
+name: Import source and publish first Windows release
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/import-and-release.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: luma-first-release
+  cancel-in-progress: false
+jobs:
+  source:
+    if: github.repository == 'larxvo/lumia-studio'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+      - name: Restore checksum-pinned published source
+        run: python scripts/import-published-source.py
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run build
+      - run: python -m pip install numpy==2.3.5 Pillow==13.0.0
+      - run: python scripts/package-gpu-kit.py
+      - run: python scripts/package-source.py
+      - name: Sequential editor and format tests
+        run: node --test --test-concurrency=1 tests/*.test.mjs
+      - name: Python contracts and local-service checks
+        run: python -m unittest tests/gpu_kit_test.py
+      - name: Commit complete source without rewriting history
+        id: commit
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m 'feat: publish complete Luma Studio 9.0.1 source and documentation'
+            git push origin HEAD:main
+          fi
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+  windows:
+    needs: source
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ needs.source.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run build
+      - name: Build Windows x64 installer
+        run: npm run desktop:win
+      - name: Validate archive, PE metadata and every payload file
+        run: node scripts/verify-windows.mjs
+      - name: Silent installation and removal on Windows
+        shell: pwsh
+        run: ./scripts/windows-smoke.ps1 -Installer ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe
+      - name: Assemble complete source archive
+        run: python scripts/package-source.py
+      - name: Publish versioned installer, source and evidence
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ needs.source.outputs.sha }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tag = 'v9.0.1'
+          @'
+          Luma Studio 9.0.1 — free photo and design editor by Larx Vo · https://vovinhlac.com.
+
+          Download the x64 Setup.exe, verify its SHA-256, then install for the current Windows user. The complete source ZIP includes the editor, local model/runtime assets and their notices. No separate Node/Python is needed for normal editing.
+
+          This release adds professional repository documentation, automated source/format tests and a Windows installer/payload/install-removal pipeline. It fixes silent-mode forwarding in the removal helper and the Windows verifier path.
+
+          Read the attached payload and Windows smoke reports for actual validation. Installation/removal is exercised on a GitHub-hosted Windows VM; interactive editing on Windows, live Canva OAuth and physical-GPU generative quality remain separate and incomplete validations. The installer is unsigned. PSD/PSB support is RGB 8-bit with explicit subsets; native Canva editing occurs in Canva with PNG interchange into Luma.
+
+          Application code is MIT; third-party components/model weights retain their licenses. No forced visual watermark or Luma paywall. See README.vi.md, docs/INSTALLATION.md and docs/COMPATIBILITY.md.
+          '@ | Set-Content -Encoding utf8 release-notes.md
+          gh release view $tag --repo $env:GITHUB_REPOSITORY --json isDraft,targetCommitish > release-existing.json 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            $existing = Get-Content release-existing.json -Raw | ConvertFrom-Json
+            if (-not $existing.isDraft -or $existing.targetCommitish -ne $env:SOURCE_SHA) { throw 'Refusing to replace a published release or a different source commit.' }
+          } else {
+            gh release create $tag --repo $env:GITHUB_REPOSITORY --draft --target $env:SOURCE_SHA --title 'Luma Studio 9.0.1 — Windows x64 & source' --notes-file release-notes.md
+            if ($LASTEXITCODE -ne 0) { throw 'Unable to create release draft.' }
+          }
+          gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe.sha256 ./releases/windows/release.json ./releases/luma-studio-9.0.1-source.zip ./qa/platform9-windows-verification.json ./qa/windows-9.0.1-smoke.json
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to upload release assets.' }
+          gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest
+          if ($LASTEXITCODE -ne 0) { throw 'Unable to publish release.' }
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: windows-9.0.1-evidence
+          path: |
+            qa/*windows*.json
+            qa/windows-9.0.1-smoke.json
+            releases/windows/release.json
+          if-no-files-found: warn
+          retention-days: 14
