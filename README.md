@@ -16,7 +16,7 @@ Created by **[Larx Vo](https://vovinhlac.com)** · Windows desktop · Browser ed
 
 </div>
 
-![Luma Studio editor with layered canvas, contextual properties and organized task navigation](qa/platform9-canva.png)
+![Luma Studio editor with layered canvas, contextual properties and organized task navigation](qa/core8-desktop.png)
 
 Luma Studio brings layered editing, portrait retouch, subject selection, local inpainting, studio presets and design tools into one workspace. Start with an automatic result, inspect it, then refine the mask or parameters. Keep the original source and save an editable `.luma` project before exporting the finished image.
 
@@ -94,6 +94,7 @@ See [development and release instructions](docs/DEVELOPMENT.md) for generation o
 | [Development](docs/DEVELOPMENT.md) | Local setup, checks, source packaging and CI/release process. |
 | [Canva](docs/CANVA.md) | OAuth configuration, actual handoff behavior and public-integration requirements. |
 | [GPU verification](docs/GPU-VERIFICATION.md) | CUDA proof, benchmark artifacts and remaining quality evaluation. |
+| [Roadmap](ROADMAP.md) | Prioritized work and the evidence required to call it complete. |
 | [Changelog](CHANGELOG.md) | Current changes and preserved earlier release history. |
 | [Versioned feature guides](FEATURES.vi.md) | Existing detailed editor guides; check their version scope. |
 

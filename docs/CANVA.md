@@ -29,3 +29,6 @@ Native elements stay in Canva. PNG import is flattened. Full offline Canva editi
 A shared public integration needs its own approved Canva app and a backend that protects the application secret. Requiring each user to enter a developer secret is a development/personal-app setup, not the final public onboarding experience. Live account verification is still pending; automated connector tests use labeled HTTP fixtures.
 
 Official references: [authentication](https://www.canva.dev/docs/apps/rest-apis/authentication/), [design listing](https://www.canva.dev/docs/apps/rest-apis/reference/designs/list-designs/), [exports](https://www.canva.dev/docs/apps/rest-apis/reference/exports/create-design-export-job/).
+
+
+![Canva connection panel in the browser preview; the account bridge requires the Windows app](../qa/platform9-canva.png)
