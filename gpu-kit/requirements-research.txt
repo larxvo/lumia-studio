@@ -1,0 +1,4 @@
+# Installed into an isolated --target directory, never into ComfyUI's package tree.
+transformers==4.57.1
+Pillow==12.0.0
+numpy==2.3.4

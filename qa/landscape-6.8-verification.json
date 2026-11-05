@@ -1,0 +1,320 @@
+{
+  "runtime": "Deterministic single-image SDR tone/detail/sky processing on CPU",
+  "dimensions": [
+    864,
+    1536
+  ],
+  "prepareMs": 219,
+  "analysis": {
+    "median": 0.45098039215686275,
+    "low": 0.027450980392156862,
+    "high": 0.8941176470588236,
+    "darkFraction": 0.24910105010609568,
+    "blackFraction": 0.02668894073109568,
+    "clippedFraction": 0.02145197362075617,
+    "skyFraction": 0.5324667343781614,
+    "warmCenter": [
+      0.6539427836835514,
+      0.4584059878553184
+    ],
+    "generative": false,
+    "method": "Single-image SDR tone mapping, luma detail, editable heuristic sky hint"
+  },
+  "sourceRegions": {
+    "blueSky": {
+      "medianLuma": 129.212,
+      "meanRGB": [
+        112.54087825130921,
+        135.87364378092178,
+        168.29588360385384
+      ],
+      "clippedChannelFraction": 0
+    },
+    "warmCloud": {
+      "medianLuma": 172.38339999999997,
+      "meanRGB": [
+        165.6791871382315,
+        158.40572453712386,
+        145.5748665441498
+      ],
+      "clippedChannelFraction": 0.17342384577879458
+    },
+    "road": {
+      "medianLuma": 49.931799999999996,
+      "meanRGB": [
+        52.20076881293611,
+        52.45600217273221,
+        54.60639075753144
+      ],
+      "clippedChannelFraction": 0.0063301717294112735
+    },
+    "darkTrees": {
+      "medianLuma": 4.5026,
+      "meanRGB": [
+        7.314576026408088,
+        8.857334433670312,
+        6.984655456983702
+      ],
+      "clippedChannelFraction": 0.00018052403548586755
+    }
+  },
+  "results": [
+    {
+      "preset": "sunset",
+      "renderMs": 650,
+      "params": {
+        "amount": 100,
+        "hdr": 30,
+        "shadows": 32,
+        "highlights": 36,
+        "exposure": 0,
+        "contrast": 8,
+        "clarity": 18,
+        "sharpness": 24,
+        "noise": 20,
+        "vibrance": 24,
+        "dehaze": 5,
+        "skyBlue": 20,
+        "skyDetail": 12,
+        "warmth": 20,
+        "glow": 12,
+        "sunX": 65,
+        "sunY": 46,
+        "skyEnabled": true
+      },
+      "alphaChangedPixels": 0,
+      "transparentRGBChangedPixels": 0,
+      "regions": {
+        "blueSky": {
+          "medianLuma": 139.3684,
+          "meanRGB": [
+            115.57549981193762,
+            146.03164872840898,
+            189.39390750224229
+          ],
+          "clippedChannelFraction": 0
+        },
+        "warmCloud": {
+          "medianLuma": 177.3834,
+          "meanRGB": [
+            169.11517208616183,
+            161.66215979697208,
+            148.19960244533624
+          ],
+          "clippedChannelFraction": 0.15860930877995724
+        },
+        "road": {
+          "medianLuma": 61.2206,
+          "meanRGB": [
+            63.488029081184976,
+            63.92944887811808,
+            67.02312706305102
+          ],
+          "clippedChannelFraction": 0.005870555300213095
+        },
+        "darkTrees": {
+          "medianLuma": 6.29,
+          "meanRGB": [
+            10.651614400660202,
+            12.809830823189602,
+            10.16793893129771
+          ],
+          "clippedChannelFraction": 0.0011347225087683104
+        }
+      }
+    },
+    {
+      "preset": "hdr",
+      "renderMs": 588,
+      "params": {
+        "amount": 100,
+        "hdr": 45,
+        "shadows": 40,
+        "highlights": 35,
+        "exposure": 0,
+        "contrast": 12,
+        "clarity": 24,
+        "sharpness": 28,
+        "noise": 20,
+        "vibrance": 26,
+        "dehaze": 5,
+        "skyBlue": 20,
+        "skyDetail": 12,
+        "warmth": 8,
+        "glow": 0,
+        "sunX": 65,
+        "sunY": 46,
+        "skyEnabled": true
+      },
+      "alphaChangedPixels": 0,
+      "transparentRGBChangedPixels": 0,
+      "regions": {
+        "blueSky": {
+          "medianLuma": 143.8016,
+          "meanRGB": [
+            119.20260828053121,
+            150.73293333911988,
+            195.51876283887395
+          ],
+          "clippedChannelFraction": 0
+        },
+        "warmCloud": {
+          "medianLuma": 180.89,
+          "meanRGB": [
+            171.6504269337034,
+            164.89270399679955,
+            152.43929165260224
+          ],
+          "clippedChannelFraction": 0.16454137443898537
+        },
+        "road": {
+          "medianLuma": 66.2206,
+          "meanRGB": [
+            68.45748548029917,
+            68.96622863828188,
+            72.40099444281954
+          ],
+          "clippedChannelFraction": 0.00687335478210003
+        },
+        "darkTrees": {
+          "medianLuma": 7.289999999999999,
+          "meanRGB": [
+            12.207318960181556,
+            14.721735093872498,
+            11.72366927996699
+          ],
+          "clippedChannelFraction": 0.0015473488755931503
+        }
+      }
+    },
+    {
+      "preset": "clear",
+      "renderMs": 643,
+      "params": {
+        "amount": 100,
+        "hdr": 25,
+        "shadows": 25,
+        "highlights": 25,
+        "exposure": 0,
+        "contrast": 8,
+        "clarity": 20,
+        "sharpness": 24,
+        "noise": 20,
+        "vibrance": 20,
+        "dehaze": 10,
+        "skyBlue": 30,
+        "skyDetail": 20,
+        "warmth": 0,
+        "glow": 0,
+        "sunX": 65,
+        "sunY": 46,
+        "skyEnabled": true
+      },
+      "alphaChangedPixels": 0,
+      "transparentRGBChangedPixels": 0,
+      "regions": {
+        "blueSky": {
+          "medianLuma": 137.522,
+          "meanRGB": [
+            113.1390070306397,
+            144.79088548447763,
+            190.6239837398374
+          ],
+          "clippedChannelFraction": 0
+        },
+        "warmCloud": {
+          "medianLuma": 177.45559999999998,
+          "meanRGB": [
+            168.38061483453976,
+            162.14716398504794,
+            150.82637612671743
+          ],
+          "clippedChannelFraction": 0.17583667754316218
+        },
+        "road": {
+          "medianLuma": 58.9358,
+          "meanRGB": [
+            60.91917018342874,
+            61.32203442944888,
+            64.20237747043831
+          ],
+          "clippedChannelFraction": 0.006852463126227385
+        },
+        "darkTrees": {
+          "medianLuma": 5.5026,
+          "meanRGB": [
+            9.615019599752424,
+            11.309289251083145,
+            9.10689601815556
+          ],
+          "clippedChannelFraction": 0.0008768310295027852
+        }
+      }
+    },
+    {
+      "preset": "natural",
+      "renderMs": 615,
+      "params": {
+        "amount": 100,
+        "hdr": 15,
+        "shadows": 18,
+        "highlights": 20,
+        "exposure": 0,
+        "contrast": 4,
+        "clarity": 8,
+        "sharpness": 15,
+        "noise": 15,
+        "vibrance": 12,
+        "dehaze": 0,
+        "skyBlue": 8,
+        "skyDetail": 5,
+        "warmth": 8,
+        "glow": 0,
+        "sunX": 65,
+        "sunY": 46,
+        "skyEnabled": true
+      },
+      "alphaChangedPixels": 0,
+      "transparentRGBChangedPixels": 0,
+      "regions": {
+        "blueSky": {
+          "medianLuma": 133.9352,
+          "meanRGB": [
+            114.29199215924544,
+            140.69257587593668,
+            178.01538856580737
+          ],
+          "clippedChannelFraction": 0
+        },
+        "warmCloud": {
+          "medianLuma": 174.4528,
+          "meanRGB": [
+            166.9423608246134,
+            159.6229294027929,
+            146.47686556901573
+          ],
+          "clippedChannelFraction": 0.1654790033629624
+        },
+        "road": {
+          "medianLuma": 55.99999999999999,
+          "meanRGB": [
+            58.1279196089082,
+            58.45186562486943,
+            61.119082438474074
+          ],
+          "clippedChannelFraction": 0.005995905235448962
+        },
+        "darkTrees": {
+          "medianLuma": 5.5026,
+          "meanRGB": [
+            9.164328450587993,
+            11.197544873117392,
+            8.761630905714876
+          ],
+          "clippedChannelFraction": 0.0006189395502372602
+        }
+      }
+    }
+  ],
+  "limits": "Manual observation boxes, not labeled segmentation ground truth or an aesthetic score. Sky hint uses color/top connectivity and can need brush correction. Dark/clipped/missing detail is not recovered; this does not merge exposure brackets or export HDR10. No GPU used."
+}

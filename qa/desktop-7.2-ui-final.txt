@@ -1,0 +1,41 @@
+✔ Window organizes workspace/panels and View contains viewing controls without task launchers (13.806803ms)
+✔ workspace presets, panel tabs and reset retain a usable context and layer stack (42.062704ms)
+✔ aspect lock changes W and H in one undoable operation (21.260087ms)
+✔ Levels switches stored channel controls, output values and Undo; Colorize remains a valid project (210.719ms)
+✔ nine style controls preview real values; Cancel and Apply/Undo preserve exact state (40.321005ms)
+✔ expanded filters and effects can be toggled directly and undone (34.803935ms)
+✔ Fill, mask density and disabled mask are persisted and undoable (26.398364ms)
+✔ Color HEX/RGB, real gradients and repeating patterns work without altering pixel layers (27.282556ms)
+✔ Paths tab converts a closed vector shape to a real selection with undo (20.147763ms)
+✔ Select & Mask can output a layer mask and records a reversible change (45.021328ms)
+✔ layer search retains expandable filter and effect children (9.395937ms)
+✔ masked property transforms and flipping preserve mask density and disabled state (43.527831ms)
+✔ menus expose unavailable actions and Escape closes menu without discarding selection (32.473445ms)
+✔ sidebar has five stable task entries and header contains only global file/search actions (2.381104ms)
+✔ group search supports accents, unaccented Vietnamese and English; clearing restores all tools (16.610513ms)
+✔ every grouped tool remains reachable through the full command palette (42.513102ms)
+✔ Design subtabs keep the panel open and selected subtab when returning to Design (68.486958ms)
+✔ a layer without recipes shows one photo launcher rather than a stack of unrelated workflows (6.605929ms)
+✔ no-image state explains how to start and disables photo-only cards without hiding sample actions (9.353729ms)
+✔ Escape closes the tool panel; AI and advanced groups remain independently discoverable (5.529289ms)
+✔ task categories jump directly to a group and switching panels keeps independent queries (15.831794ms)
+✔ Ctrl K opens global search while a panel input is focused, and Escape closes the palette (41.32601ms)
+✔ editor boots with six actual sample layers, usable panels and rendered pixels (481.081594ms)
+✔ adjustment control changes rendered document state and undo restores it (1333.520216ms)
+✔ shape and text commands create valid editable layers, duplicate and delete undo correctly (538.589024ms)
+✔ selection-to-mask, inversion and removal are real reversible commands (41.801554ms)
+✔ export dialog honestly distinguishes full-edit project and pixel PSD output (446.732387ms)
+✔ style preview cancellation reverts the document, while apply records history (92.67597ms)
+✔ canvas resize rejects invalid dimensions, preserves document on invalid request and creates new document preset (16.149243ms)
+✔ pointer brush writes real pixels, releases transient data and supports erasing (340.983162ms)
+✔ dragging a shape and cropping through the canvas keep valid layer types and geometry (54.146861ms)
+✔ per-channel curves retain the master curve when switching channels (12.404894ms)
+✔ local autosave stores complete document state (1002.936676ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13284.312891

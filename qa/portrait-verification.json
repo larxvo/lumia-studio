@@ -1,0 +1,88 @@
+{
+  "runtime": "onnxruntime-web WASM, CPU, single thread",
+  "fixture": "assets/portrait-demo.jpg (Pete Souza / public domain)",
+  "dimensions": [
+    820,
+    1024
+  ],
+  "faces": 1,
+  "landmarks": 478,
+  "analysisMs": 925,
+  "checks": [
+    {
+      "name": "Goc",
+      "mode": "skin",
+      "elapsedMs": 80,
+      "changedPixels": 0,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235
+    },
+    {
+      "name": "Da studio",
+      "mode": "skin",
+      "elapsedMs": 281,
+      "changedPixels": 62957,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "spots": 3766,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235
+    },
+    {
+      "name": "Mau toc: dong",
+      "mode": "hair",
+      "elapsedMs": 264,
+      "changedPixels": 12630,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235,
+      "hairCoverage": 0.012583353708019867
+    },
+    {
+      "name": "Mau mat: xanh",
+      "mode": "eyes",
+      "elapsedMs": 85,
+      "changedPixels": 164,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235,
+      "redEyePixels": 0
+    },
+    {
+      "name": "Rau quai non mo phong",
+      "mode": "beard",
+      "elapsedMs": 235,
+      "changedPixels": 9024,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235,
+      "stubblePixels": 0
+    },
+    {
+      "name": "Cuoi: cung moi",
+      "mode": "face",
+      "elapsedMs": 138,
+      "changedPixels": 13844,
+      "outsideMaskChangedPixels": null,
+      "alphaChangedPixels": 0,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235
+    }
+  ],
+  "redEye": {
+    "injectedPixels": 89,
+    "correctedPixelsBelowRed80": 89,
+    "detectedPixels": 89,
+    "naturalPortraitDetectedPixels": 0
+  }
+}

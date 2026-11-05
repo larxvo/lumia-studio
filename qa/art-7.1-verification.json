@@ -1,0 +1,144 @@
+{
+  "fixture": "AI-generated photographic crab demo, not a camera photograph or user attachment",
+  "runtime": "actual local algorithms on native Canvas CPU; no generative GPU run",
+  "variants": [
+    {
+      "id": "dots",
+      "mode": "dots",
+      "elapsedMs": 152,
+      "marks": 2379,
+      "svgBytes": 241054
+    },
+    {
+      "id": "cross",
+      "mode": "cross",
+      "elapsedMs": 121,
+      "marks": 2382,
+      "svgBytes": 426264
+    },
+    {
+      "id": "silhouette",
+      "mode": "silhouette",
+      "elapsedMs": 104,
+      "marks": 1858,
+      "svgBytes": 262690
+    },
+    {
+      "id": "square",
+      "mode": "square",
+      "elapsedMs": 95,
+      "marks": 2082,
+      "svgBytes": 299926
+    },
+    {
+      "id": "diamond",
+      "mode": "diamond",
+      "elapsedMs": 101,
+      "marks": 2379,
+      "svgBytes": 321082
+    },
+    {
+      "id": "ring",
+      "mode": "ring",
+      "elapsedMs": 127,
+      "marks": 2379,
+      "svgBytes": 359755
+    },
+    {
+      "id": "line",
+      "mode": "line",
+      "elapsedMs": 145,
+      "marks": 3288,
+      "svgBytes": 482226
+    },
+    {
+      "id": "triangle",
+      "mode": "triangle",
+      "elapsedMs": 110,
+      "marks": 1607,
+      "svgBytes": 224384
+    },
+    {
+      "id": "hex",
+      "mode": "hex",
+      "elapsedMs": 133,
+      "marks": 2379,
+      "svgBytes": 402910
+    },
+    {
+      "id": "pixel",
+      "mode": "pixel",
+      "elapsedMs": 89,
+      "marks": 1558,
+      "svgBytes": 184120
+    },
+    {
+      "id": "trace",
+      "mode": "trace",
+      "elapsedMs": 335,
+      "marks": 8,
+      "svgBytes": 199581
+    },
+    {
+      "id": "poster",
+      "mode": "poster",
+      "elapsedMs": 711,
+      "marks": null,
+      "svgBytes": null
+    },
+    {
+      "id": "comic",
+      "mode": "comic",
+      "elapsedMs": 423,
+      "marks": null,
+      "svgBytes": null
+    },
+    {
+      "id": "watercolor",
+      "mode": "watercolor",
+      "elapsedMs": 672,
+      "marks": null,
+      "svgBytes": null
+    },
+    {
+      "id": "pencil",
+      "mode": "pencil",
+      "elapsedMs": 525,
+      "marks": null,
+      "svgBytes": null
+    },
+    {
+      "id": "voxel",
+      "mode": "voxel",
+      "elapsedMs": 103,
+      "marks": 715,
+      "svgBytes": 202767
+    },
+    {
+      "id": "relief",
+      "mode": "relief",
+      "elapsedMs": 392,
+      "marks": null,
+      "svgBytes": null
+    }
+  ],
+  "browserPNG": {
+    "bytes": 314277,
+    "sha256": "dd4dc073636d90d0caf7aa826491f76b68626d95b5ce424fd19a129815529634",
+    "width": 1254,
+    "height": 1254,
+    "ppmX": 11811,
+    "ppmY": 11811,
+    "unit": 1,
+    "software": "Software\u0000Luma Studio - Larx Vo - vovinhlac.com"
+  },
+  "browserChecks": [
+    "actual 1254px native PNG/300DPI download independently decoded",
+    "density 80 to81, keyboard Undo80 / Redo81",
+    "apply keeps hidden original and a separate Art result",
+    "recipe reopen restores density81",
+    "real worker preview with photo/pattern comparison"
+  ],
+  "svgVerification": "SVG geometry serialized and independently decoded/rasterized; cloud-browser download event timed out, visible fallback link added and its Blob bytes tested",
+  "gpu": "No real GPU generation run; mocked ComfyUI UI/graph tests are not a quality benchmark"
+}

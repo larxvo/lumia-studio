@@ -1,0 +1,33 @@
+{
+  "input": {
+    "bytes": 25766300,
+    "width": 6000,
+    "height": 4000,
+    "type": "seeded synthetic noise JPEG, not a quality benchmark"
+  },
+  "browser": "Chrome cloud, actual UI file chooser and worker processing",
+  "nativePreset": true,
+  "sourceRetainedHidden": true,
+  "editedExport": {
+    "bytes": 81465588,
+    "width": 6000,
+    "height": 4000,
+    "dpi": [
+      299.9994,
+      299.9994
+    ],
+    "software": "Luma Studio - Larx Vo - vovinhlac.com",
+    "sampleMeanAbsoluteRGBDifference": [
+      10.45405,
+      10.481975,
+      10.428125
+    ],
+    "sha256": "bb7be8fa62bc5dbd5f2d9d67397e45b4283a5e4820935be93ef8a31db894c1bf"
+  },
+  "limitations": [
+    "one device/fixture only",
+    "no GPU run",
+    "native output is sRGB 8-bit",
+    "no universal browser/RAM guarantee"
+  ]
+}

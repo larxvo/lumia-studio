@@ -1,0 +1,32 @@
+{
+  "name": "LaMa INT8 fixed512",
+  "version": 1,
+  "bytes": 62074990,
+  "sha256": "cab19978adc306622fe37ef60d4a52103b99c98141d499c2a2366a7ed1255dbe",
+  "parts": [
+    {
+      "file": "inpaint.part1",
+      "bytes": 16777216,
+      "sha256": "3bb0bc779f9e86a386f66d43afdad75729db40cbab4e40e61e776f439073b229"
+    },
+    {
+      "file": "inpaint.part2",
+      "bytes": 16777216,
+      "sha256": "969a779fb55e3c7f04e51615e480365d00ed47368dec04e868489b98e4475bc7"
+    },
+    {
+      "file": "inpaint.part3",
+      "bytes": 16777216,
+      "sha256": "1e1d4f23c1ae29f8c1808d50ae5fd5b93a456eed0dc8be6509351d4b4839e80c"
+    },
+    {
+      "file": "inpaint.part4",
+      "bytes": 11743342,
+      "sha256": "81a8f2671d8d8799f626ffbdd90bfd9b0f2288b083c11a4a57c9c42ea665f538"
+    }
+  ],
+  "input": "input",
+  "output": "output",
+  "size": 512,
+  "outputScale": 255
+}

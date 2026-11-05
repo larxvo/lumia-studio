@@ -1,0 +1,45 @@
+{
+  "runtime": "Real CPU/WASM YuNet + SlimSAM; deterministic native color processing",
+  "dimensions": [
+    1147,
+    1536
+  ],
+  "analysisDimensions": [
+    765,
+    1024
+  ],
+  "selectionMs": 13597,
+  "maskMs": 1156,
+  "bestCandidate": 1,
+  "candidateScores": [
+    0.9534051418304443,
+    0.9690472483634949,
+    0.819690465927124
+  ],
+  "maskPixels": 548125,
+  "faces": 1,
+  "results": [
+    {
+      "color": "#263b62",
+      "renderMs": 415,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "detectedFaceCoreChangedPixels": 0
+    },
+    {
+      "color": "#702e43",
+      "renderMs": 342,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "detectedFaceCoreChangedPixels": 0
+    },
+    {
+      "color": "#526b50",
+      "renderMs": 380,
+      "outsideMaskChangedPixels": 0,
+      "alphaChangedPixels": 0,
+      "detectedFaceCoreChangedPixels": 0
+    }
+  ],
+  "limitation": "Single supplied vest photo; mask review has no hand-labeled ground truth or diverse garment benchmark. Face core isolation is a pixel test, not biometric identity analysis. Folds and visible texture use original pixels; black/white clipped areas cannot reveal unknown detail. No real GPU used."
+}

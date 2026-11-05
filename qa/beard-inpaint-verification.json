@@ -1,0 +1,16 @@
+{
+  "runtime": "real LaMa ONNX inference, CPU/WASM, single thread",
+  "fixture": "Pete Souza public-domain portrait with a PROCEDURALLY SIMULATED beard; not a real-beard quality dataset",
+  "dimensions": [
+    410,
+    512
+  ],
+  "inferenceMs": 20300,
+  "maskPixels": 2259,
+  "outsideChangedPixels": 0,
+  "lipAnchorChangedPixels": 0,
+  "simulatedInputMaskedMAE": 84.1136195956913,
+  "inpaintedMaskedMAE": 19.307658255865427,
+  "improvementPercent": 77.04574081026176,
+  "limitation": "Mask isolation and inference are verified. Hidden skin is predicted. This fixture does not validate dense real-beard removal, diverse skin tones, or ComfyUI/GPU quality."
+}

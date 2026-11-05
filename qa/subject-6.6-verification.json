@@ -1,0 +1,36 @@
+{
+  "runtime": "Actual CPU/WASM SlimSAM global/local + DeepLab + LaMa",
+  "dimensions": [
+    1280,
+    853
+  ],
+  "removedRegions": 2,
+  "selectionMs": 29167,
+  "fillMs": 22886,
+  "protectedPixels": 129511,
+  "protectedChangedPixels": 0,
+  "outsideChangedPixels": 0,
+  "stats": {
+    "changedPixels": 581035,
+    "outsideChangedBytes": 0,
+    "detailSamples": 571186,
+    "crops": [
+      {
+        "x": 0,
+        "y": 0,
+        "side": 2663,
+        "width": 1280,
+        "height": 853,
+        "scale": 0.4,
+        "padX": 0,
+        "padY": 85,
+        "candidates": 1,
+        "boundaryScore": 387.28660018029746
+      }
+    ],
+    "model": "LaMa + local texture residuals",
+    "originalResolution": true
+  },
+  "limitation": "No clean scene ground truth. This verifies selected keeper/exterior equality, not accurate hidden scene reconstruction or universal instance recall.",
+  "visualReview": "Crowded contact-group stress case failed photographic quality: warped/ghosted background and clothing remain. Keeper mask covers face/body after face prompts; its pixels are exact, not a clean scene guarantee."
+}

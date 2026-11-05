@@ -1,0 +1,97 @@
+{
+  "privateInputsExcluded": true,
+  "runs": [
+    {
+      "dimensions": [
+        1080,
+        1589
+      ],
+      "totalMs": 6542,
+      "reports": [
+        {
+          "preset": "clean",
+          "ms": 1837,
+          "originalResolution": true,
+          "changedPixels": 1716108,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        },
+        {
+          "preset": "text",
+          "ms": 1650,
+          "originalResolution": true,
+          "changedPixels": 1716116,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        },
+        {
+          "preset": "stamp",
+          "ms": 1516,
+          "originalResolution": true,
+          "changedPixels": 1716115,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        },
+        {
+          "preset": "natural",
+          "ms": 1120,
+          "originalResolution": true,
+          "changedPixels": 1716031,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        }
+      ],
+      "limitation": "Pixel enhancement only. No OCR ground truth, hidden-text or seal reconstruction claim."
+    },
+    {
+      "dimensions": [
+        1046,
+        1504
+      ],
+      "totalMs": 6474,
+      "reports": [
+        {
+          "preset": "clean",
+          "ms": 1541,
+          "originalResolution": true,
+          "changedPixels": 1573158,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        },
+        {
+          "preset": "text",
+          "ms": 1724,
+          "originalResolution": true,
+          "changedPixels": 1573160,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        },
+        {
+          "preset": "stamp",
+          "ms": 1580,
+          "originalResolution": true,
+          "changedPixels": 1573160,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        },
+        {
+          "preset": "natural",
+          "ms": 1302,
+          "originalResolution": true,
+          "changedPixels": 1573089,
+          "generative": false,
+          "method": "Flat-field shading + protected ink tone + bounded detail/deconvolution"
+        }
+      ],
+      "limitation": "Pixel enhancement only. No OCR ground truth, hidden-text or seal reconstruction claim."
+    }
+  ],
+  "browserExport": {
+    "format": "PNG",
+    "dimensions": [
+      1000,
+      1400
+    ]
+  },
+  "visualReview": "Paper illumination improved. Original smeared stamp shape remains smeared; heavy creases are reduced, not guaranteed removed. No OCR truth or seal reconstruction claim."
+}

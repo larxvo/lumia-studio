@@ -1,0 +1,16 @@
+{
+  "schema": "luma-hardware-probe-v1",
+  "time": "2026-11-05T19:24:11.862344+00:00",
+  "platform": "Linux",
+  "architecture": "x86_64",
+  "status": "blocked",
+  "computeVerified": false,
+  "imageQualityVerified": false,
+  "hardware": [],
+  "cudaProof": null,
+  "reasons": [
+    "nvidia-smi is not available in this environment.",
+    "CUDA operation unavailable: No module named 'torch'"
+  ],
+  "scope": "Hardware inventory plus a checked CUDA operation. Not a photo-quality certification."
+}

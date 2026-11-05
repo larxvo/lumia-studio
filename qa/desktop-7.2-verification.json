@@ -1,0 +1,22 @@
+{
+  "version": "7.2.0",
+  "fullSuite": {
+    "passed": 367,
+    "failed": 0,
+    "milliseconds": 135488.389906
+  },
+  "finalAffectedUISuites": {
+    "passed": 33,
+    "failed": 0
+  },
+  "distinctPassingTests": 368,
+  "browser": "Chrome",
+  "viewport": [
+    1364,
+    936
+  ],
+  "sourceImagesPublished": false,
+  "gpuVerified": false,
+  "psdSmartFiltersSupported": false,
+  "nativeCanvaSupported": false
+}

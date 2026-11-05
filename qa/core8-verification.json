@@ -1,0 +1,42 @@
+{
+  "version": "8.0.0",
+  "date": "2026-11-05",
+  "full_suite": {
+    "tests": 397,
+    "passed": 397,
+    "failed": 0,
+    "duration_ms": 154673.787156
+  },
+  "final_affected_ui_suite": {
+    "tests": 20,
+    "passed": 20,
+    "failed": 0
+  },
+  "new_tests": {
+    "engine": 5,
+    "native_canvas_ui": 7,
+    "psd_psb_binary": 16,
+    "protected_existing_photo_recipe": 1
+  },
+  "chrome": {
+    "viewport": [
+      1364,
+      936
+    ],
+    "observed": [
+      "Type Studio range recolor retains Georgia144px italic and tracking-6",
+      "local Undo and Redo in Type Studio",
+      "path anchor x872→882; document Undo then reselect shows872",
+      "alpha preview and return RGB",
+      "separate lock row and correct tool icon",
+      "Larx Vo branding and Free edition"
+    ]
+  },
+  "limits": [
+    "No physical GPU quality pass",
+    "No native Canva or signed Windows installer",
+    "No real Adobe Photoshop interoperability pass",
+    "Browser file chooser reopen was interrupted by runtime reset; native file tests were rerun after recovery",
+    "Smart Filter rendering is approximate; supported native subset only"
+  ]
+}

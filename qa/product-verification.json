@@ -1,0 +1,41 @@
+{
+  "runtime": "Real CPU/WASM SlimSAM global + local crop; deterministic native pixel tone processing",
+  "dimensions": [
+    864,
+    1536
+  ],
+  "selectionMs": 25310,
+  "processingMs": 364,
+  "lowDetailWarning": true,
+  "maskPixels": 15937,
+  "outsideMaskChangedSilverOnly": 0,
+  "alphaChangedPixels": 0,
+  "meanRedBlueDifferenceBefore": 28.63352661411167,
+  "meanRedBlueDifferenceAfter": 2.2210567463678417,
+  "objectMeanLuminanceBefore": 173.84611698482482,
+  "objectMeanLuminanceAfter": 200.59688502180268,
+  "sceneMeanLuminanceBefore": 135.82363745864154,
+  "sceneMeanLuminanceAfter": 143.7851413780437,
+  "resultStats": {
+    "changedPixels": 1317284,
+    "outsideChangedPixels": 1301347,
+    "clippedBefore": 743,
+    "clippedAfter": 0,
+    "originalResolution": true
+  },
+  "isolatedStats": {
+    "changedPixels": 15937,
+    "outsideChangedPixels": 0,
+    "clippedBefore": 0,
+    "clippedAfter": 0,
+    "originalResolution": true
+  },
+  "limitation": "Tone/cast measurements are functional evidence, not a photographic quality score or material/chemistry classification. No clean ground-truth photo exists. Original defocus, scratches and lost lettering cannot be recovered by this operation.",
+  "release": "6.5.0",
+  "fixture": "Privately supplied photograph; image, masks and derived images are not distributed.",
+  "tests": {
+    "javascriptFullSuite": 214,
+    "newProductChecks": 18
+  },
+  "browser": "Actual Chrome worker selection and retouch, live sliders, 864x1536 decoded PNG, separate layer, autosave/reload, editable cached reopen and retained low-detail warning."
+}

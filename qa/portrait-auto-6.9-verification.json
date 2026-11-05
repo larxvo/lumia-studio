@@ -1,0 +1,78 @@
+{
+  "runtime": "real ONNX/WASM CPU, single thread; no GPU",
+  "fixture": "bundled public-domain portrait",
+  "dimensions": [
+    820,
+    1024
+  ],
+  "faces": 1,
+  "landmarks": 478,
+  "analysisMs": 1012,
+  "auto": {
+    "shineCoverage": 0.47987256595009825,
+    "skinPixels": 33586,
+    "faceIndex": 0,
+    "method": "local-landmarks-tone-v1"
+  },
+  "variants": [
+    {
+      "name": "Original",
+      "changedPixels": 0,
+      "alphaChangedPixels": 0,
+      "elapsedMs": 85,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235
+    },
+    {
+      "name": "Auto natural",
+      "changedPixels": 45519,
+      "alphaChangedPixels": 0,
+      "elapsedMs": 903,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.03993319772001963,
+      "shinePixels": 15662,
+      "shineReduction": 3.882248773869524,
+      "stubblePixels": 2167
+    },
+    {
+      "name": "Reduce shine",
+      "changedPixels": 13558,
+      "alphaChangedPixels": 0,
+      "elapsedMs": 389,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.03993319772001963,
+      "shinePixels": 16525,
+      "shineReduction": 5.869889997424751
+    },
+    {
+      "name": "Face and chin",
+      "changedPixels": 29904,
+      "alphaChangedPixels": 0,
+      "elapsedMs": 82,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235
+    },
+    {
+      "name": "Brows darker",
+      "changedPixels": 634,
+      "alphaChangedPixels": 0,
+      "elapsedMs": 175,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235
+    },
+    {
+      "name": "Brows lighter",
+      "changedPixels": 612,
+      "alphaChangedPixels": 0,
+      "elapsedMs": 143,
+      "spots": 0,
+      "repairs": 0,
+      "skinCoverage": 0.07150175042679235
+    }
+  ]
+}

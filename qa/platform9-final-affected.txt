@@ -1,0 +1,36 @@
+✔ large document geometry is accepted independently of compressed bytes, but unsafe dimensions fail (9.285498ms)
+✔ allocation failure is explicit and successful native capacity is tested on the device (18.391546ms)
+✔ opening an image above18 MB preserves compressed source and native pixels without creating a full canvas (0.569273ms)
+✔ PNG print metadata has genuine300DPI pHYs, valid CRC and creator software while original image chunks remain intact (2.301633ms)
+✔ JPEG has one JFIF density in inches at requested DPI and source image scan bytes are retained (2.599249ms)
+✔ OAuth uses independent S256 PKCE and expiring one-use CSRF state, exchanges secrets only at token endpoint (10.651262ms)
+✔ OAuth rejects expired callbacks and unexpected redirects / URL schemes (0.950745ms)
+✔ concurrent requests serialize single-use refresh rotation and never leak tokens to result data (12.753326ms)
+✔ native editing uses actual fresh API edit URL, export validates PNG and preserves page request (8.028541ms)
+✔ sending retouched PNG uploads actual bytes and creates a separate flattened asset design (2.609934ms)
+✔ failed export jobs and HTTP errors do not produce fake successes (1.371155ms)
+✔ PSD High Pass and Invert retain native editable filters and source (144.697509ms)
+✔ PSB High Pass and Invert retain native editable filters and source (14.702798ms)
+✔ unsupported native High Pass opacity keeps merged fallback instead of silently flattening just its stack (8.930359ms)
+✔ Invert is reversible and never changes alpha (0.240746ms)
+✔ Canva connection dialog reaches native design, page import and source metadata with isolated desktop bridge (1036.648304ms)
+✔ compatibility UI describes supported filters and distinguishes real GPU validation (4.276673ms)
+✔ editor boots with six actual sample layers, usable panels and rendered pixels (1011.214309ms)
+✔ adjustment control changes rendered document state and undo restores it (1793.632262ms)
+✔ shape and text commands create valid editable layers, duplicate and delete undo correctly (837.065316ms)
+✔ selection-to-mask, inversion and removal are real reversible commands (112.738882ms)
+✔ export dialog honestly distinguishes full-edit project and pixel PSD output (639.493078ms)
+✔ style preview cancellation reverts the document, while apply records history (145.035074ms)
+✔ canvas resize rejects invalid dimensions, preserves document on invalid request and creates new document preset (27.488586ms)
+✔ pointer brush writes real pixels, releases transient data and supports erasing (525.289295ms)
+✔ dragging a shape and cropping through the canvas keep valid layer types and geometry (110.753646ms)
+✔ per-channel curves retain the master curve when switching channels (21.125968ms)
+✔ local autosave stores complete document state (1007.984801ms)
+ℹ tests 28
+ℹ suites 0
+ℹ pass 28
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 21152.627835

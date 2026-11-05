@@ -1,0 +1,6 @@
+// Structural validity is separate from a device's actual allocation capacity.
+export const MAX_PIXELS=Math.floor(Number.MAX_SAFE_INTEGER/4);
+export function assertImageDimensions(w,h){if(!Number.isSafeInteger(w)||!Number.isSafeInteger(h)||w<1||h<1||!Number.isSafeInteger(w*h)||w*h>MAX_PIXELS)throw Error('Kích thước ảnh phải là số nguyên dương hợp lệ.');return w*h;}
+export function capacityError(w,h,cause){return new Error(`Máy hoặc trình duyệt chưa cấp được bộ nhớ cho ${w.toLocaleString()} × ${h.toLocaleString()} px. Nguồn được giữ; hãy đóng bớt tài liệu hoặc dùng bản làm việc nhỏ hơn.`,{cause});}
+export function checkedCanvas(w,h,create=(a,b)=>{const c=document.createElement('canvas');c.width=a;c.height=b;return c;}){w=Math.max(1,Math.round(w));h=Math.max(1,Math.round(h));assertImageDimensions(w,h);try{const c=create(w,h),x=c.getContext('2d');if(c.width!==w||c.height!==h||!x)throw Error('Canvas unavailable');if(w*h>16777216){x.fillStyle='rgba(0,0,0,0)';x.fillRect(w-1,h-1,1,1);x.getImageData(w-1,h-1,1,1);}return c;}catch(e){throw capacityError(w,h,e);}}
+export const previewDimensions=(w,h,edge=1600)=>{assertImageDimensions(w,h);const scale=Math.min(1,edge/Math.max(w,h));return{width:Math.max(1,Math.round(w*scale)),height:Math.max(1,Math.round(h*scale)),scale};};

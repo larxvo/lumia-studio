@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="author" content="Larx Vo — vovinhlac.com"><meta name="theme-color" content="#191c20"><meta name="description" content="Free photo and design studio by Larx Vo · vovinhlac.com. Layered PSD editing, studio presets, print export and on-device AI.">
+  <title>Luma Studio by Larx Vo — Photo & Design</title>
+  <link rel="icon" type="image/svg+xml" href="assets/luma.svg"><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="cutout.css"><link rel="stylesheet" href="desktop.css">
+<link rel="stylesheet" href="core-studio.css"><link rel="stylesheet" href="platform-studio.css"></head>
+<body>
+<div class="app" id="app">
+  <header class="topbar">
+    <button class="brand" data-action="about" aria-label="About Luma Studio · Created by Larx Vo"><span class="brand-mark">l</span><span>luma<span class="brand-dot">.</span><small>BY LARX VO</small></span></button>
+    <nav class="menus" aria-label="Application menu"><button data-menu="File">Tệp</button><button data-menu="Edit">Sửa</button><button data-menu="Image">Ảnh</button><button data-menu="Layer">Lớp</button><button data-menu="Select">Vùng chọn</button><button data-menu="Filter">Bộ lọc</button><button data-menu="Type">Chữ</button><button data-menu="View">Xem</button><button data-menu="Window">Cửa sổ</button><button data-action="help">Trợ giúp</button></nav>
+    <div class="top-spacer"></div>
+    <button id="smart-save-content" class="button primary" data-action="smart-save-content" hidden>Lưu nội dung</button><button id="collab-live" class="collab-live" data-action="collaborate" hidden></button>
+    <button class="command-button" data-action="commands" title="Tìm mọi công cụ (Ctrl K)" aria-label="Tìm công cụ"><span data-icon="search"></span><span>Tìm công cụ</span><kbd>Ctrl K</kbd></button>
+    <div class="head-divider"></div>
+    <button class="button save-button" data-action="save" aria-label="Save project"><span data-icon="save"></span><span>Lưu dự án</span></button>
+    <button class="button primary" data-action="export" aria-label="Export"><span data-icon="download"></span><span>Xuất ảnh</span><span data-icon="chevron-down"></span></button>
+  </header>
+  <div class="options-bar"><div class="tool-context" id="tool-context"></div><div class="option-spacer"></div><button class="icon-button" data-action="undo" title="Undo (Ctrl Z)" aria-label="Undo"><span data-icon="undo"></span></button><button class="icon-button" data-action="redo" title="Redo (Ctrl Shift Z)" aria-label="Redo"><span data-icon="redo"></span></button><span class="head-divider"></span><button class="icon-button" data-action="grid" title="Toggle grid" aria-label="Toggle grid"><span data-icon="grid"></span></button><button class="icon-button" data-action="toggle-dock" title="Toggle panels (Tab)" aria-label="Toggle panels"><span data-icon="panel"></span></button></div>
+  <div class="workspace">
+    <aside class="creative-rail" aria-label="Creative workspace">
+      <button data-library="photo" title="Chỉnh ảnh theo công việc" aria-label="Chỉnh ảnh" aria-controls="creative-panel" aria-expanded="false"><span data-icon="sliders"></span><small>Chỉnh ảnh</small></button>
+      <button data-library="templates" title="Mẫu, thành phần và chữ" aria-label="Thiết kế" aria-controls="creative-panel" aria-expanded="false"><span data-icon="grid"></span><small>Thiết kế</small></button>
+      <button data-library="uploads" title="Mở ảnh, PSD và dự án" aria-label="Tệp" aria-controls="creative-panel" aria-expanded="false"><span data-icon="folder-open"></span><small>Tệp</small></button>
+      <span class="creative-divider"></span>
+      <button data-library="ai-tools" title="Tạo sinh, tô màu và kết nối AI" aria-label="AI" aria-controls="creative-panel" aria-expanded="false"><span data-icon="sparkles"></span><small>AI</small></button>
+      <button data-library="advanced" title="Smart Objects, màu in và cộng tác" aria-label="Nâng cao" aria-controls="creative-panel" aria-expanded="false"><span data-icon="layers"></span><small>Nâng cao</small></button>
+      <div class="creative-bottom"><a class="creator-credit" href="https://vovinhlac.com" target="_blank" rel="noopener noreferrer" title="Created by Larx Vo · vovinhlac.com">Larx Vo<small>vovinhlac.com</small></a><span class="edition-mark">9.0.1</span><span>FREE</span></div>
+    </aside>
+    <aside class="creative-panel" id="creative-panel" aria-label="Design library" hidden></aside>
+    <aside class="tool-rail" aria-label="Tools"><div id="tools"></div><div class="rail-bottom"><div class="swatches"><input id="foreground" type="color" value="#eef4f3" aria-label="Foreground color"><button data-action="swap-color" title="Swap foreground and background (X)" aria-label="Swap colors"><span data-icon="swap"></span></button></div><button class="tool-button" data-action="help" title="Keyboard shortcuts and help" aria-label="Help"><span data-icon="help"></span></button></div></aside>
+    <main class="editor">
+      <div class="document-bar"><div class="document-tabs" id="document-tabs" role="tablist" aria-label="Open documents"></div><button class="icon-button" data-action="new" title="New document" aria-label="New document"><span data-icon="plus"></span></button><button class="open-compact" data-action="open"><span data-icon="folder-open"></span> Open</button></div>
+      <div class="stage" id="stage" tabindex="0" aria-label="Image canvas. Use tools from the left rail to edit.">
+        <canvas class="ruler ruler-top" id="ruler-top"></canvas><canvas class="ruler ruler-left" id="ruler-left"></canvas><div class="ruler-corner"></div>
+        <div class="artboard" id="artboard"><canvas id="image-canvas" aria-label="Document image"></canvas><canvas id="overlay" aria-label="Selections and transform controls"></canvas><div id="canvas-text" contenteditable="true" spellcheck="false" aria-label="Edit text on canvas" hidden></div></div>
+        <div class="canvas-note"><span class="mint-dot"></span><span id="canvas-note">EVERY PIXEL, YOURS.</span></div>
+        <div class="zoom-controls"><button data-action="zoom-out" title="Zoom out" aria-label="Zoom out"><span data-icon="minus"></span></button><button class="zoom-value" data-action="zoom-100" title="Zoom to 100%" id="zoom-label">50%</button><button data-action="zoom-in" title="Zoom in" aria-label="Zoom in"><span data-icon="plus"></span></button><span></span><button data-action="fit" title="Fit to screen (Ctrl 0)" aria-label="Fit to screen"><span data-icon="maximize"></span></button></div>
+        <div class="drop-overlay" id="drop-overlay" hidden><span data-icon="image"></span><h2>Make it your own.</h2><p>Drop an image or a Luma project here</p></div>
+      </div>
+      <footer class="statusbar"><span class="status-mode">RGB <span>8-bit · sRGB</span><span id="proof-label" class="proof-label" hidden>ICC · CMYK preview</span></span><span id="status-size"></span><span id="status-layer-count"></span><span class="status-spacer"></span><span id="status-hint">Move tool · V</span><span class="status-autosave" id="autosave-label"><i></i> Ready</span></footer>
+    </main>
+    <aside class="dock" id="dock" aria-label="Editing panels">
+      <div class="properties-tabs" role="tablist"><button class="active" data-panel="properties" role="tab" aria-selected="true">Properties</button><button data-panel="adjustments" role="tab" aria-selected="false">Adjustments</button><button data-panel="studio" role="tab" aria-selected="false">Studio</button><button class="icon-button dock-menu" data-action="settings" aria-label="Document settings" title="Document settings"><span data-icon="sliders"></span></button></div>
+      <div class="properties" id="properties"></div>
+      <section class="navigator-section"><div class="section-heading"><span>NAVIGATOR</span><button data-action="fit" title="Fit canvas" aria-label="Fit canvas"><span data-icon="maximize"></span></button></div><div class="navigator-content"><canvas id="navigator" aria-label="Document navigator"></canvas><div><strong id="nav-zoom">50%</strong><small id="nav-size"></small><button data-action="fit">Fit canvas <span>⌘ 0</span></button></div></div></section>
+      <section class="layers-section"><div class="layer-tabs"><button class="active" data-layer-tab="layers">Layers <span id="layer-count">0</span></button><button data-layer-tab="history">History</button><button class="icon-button" data-action="add-menu" title="Add layer" aria-label="Add layer"><span data-icon="plus"></span></button></div><div id="layers-panel"><div class="layer-controls"><select id="blend-mode" aria-label="Layer blend mode"></select><label>Opacity <input id="layer-opacity" type="number" min="0" max="100" value="100" aria-label="Layer opacity"><span>%</span></label></div><div class="layer-search-row"><input id="layer-search" aria-label="Search layers" placeholder="Search layers…"><select id="layer-kind" aria-label="Layer kind"><option value="all">All kinds</option><option value="group">Groups</option><option value="text">Text</option><option value="image">Images</option><option value="shape">Shapes</option><option value="adjustment">Adjustments</option></select></div><div class="layer-selection-note" id="selection-count"></div><div class="layer-list" id="layer-list" aria-label="Layer stack"></div></div><div class="history-list" id="history-list" hidden></div><div class="layer-footer"><button data-action="styles" title="Layer styles" aria-label="Layer styles"><span class="fx-symbol">fx</span></button><button data-action="add-mask" title="Mask from selection" aria-label="Add mask"><span data-icon="mask"></span></button><button data-action="adjustments" title="Add adjustment layer" aria-label="Add adjustment"><span data-icon="adjust"></span></button><div></div><button data-action="duplicate" title="Duplicate layer (Ctrl J)" aria-label="Duplicate layer"><span data-icon="copy"></span></button><button data-action="add-paint" title="New paint layer" aria-label="New paint layer"><span data-icon="plus-square"></span></button><button data-action="delete" title="Delete layer" aria-label="Delete layer"><span data-icon="trash"></span></button></div></section>
+      <div class="dock-footnote"><span data-icon="shield"></span> Created by Larx Vo · <a href="https://vovinhlac.com" target="_blank" rel="noopener noreferrer">vovinhlac.com</a> · Free</div>
+    </aside>
+  </div>
+</div>
+<input id="file-input" type="file" accept=".luma,.psd,.psb,.pptx,.svg,image/png,image/jpeg,image/webp,image/gif,image/bmp" multiple hidden>
+<input id="place-input" type="file" accept="image/png,image/jpeg,image/webp,image/gif,image/bmp" multiple hidden>
+<div id="menu-popover" class="menu-popover" hidden></div><div id="tooltip" class="tooltip" role="tooltip" hidden></div><div id="toasts" class="toasts" aria-live="polite"></div>
+<dialog id="modal"><div id="modal-content"></div></dialog>
+<script type="module" src="app.js"></script>
+</body>
+</html>

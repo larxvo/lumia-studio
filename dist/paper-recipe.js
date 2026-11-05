@@ -1,0 +1,2 @@
+import { paperParams, PAPER_PRESETS, checkPageQuad, PAPER_FIELDS } from './paper-engine.js';
+export function validatePaperRecipe(r, assertSource) { if (!r || r.version !== 1 || r.engine !== 'paper-pixels-v1' || !PAPER_PRESETS.some(p => p.id === r.preset) || !r.params || Object.keys(r.params).length !== Object.keys(PAPER_FIELDS).length + 1) throw Error('Invalid paper recipe.'); assertSource(r.source); paperParams(r.params); checkPageQuad(r.quad); return r; }

@@ -1,0 +1,13 @@
+{
+  "name": "luma-studio-desktop",
+  "version": "9.0.1",
+  "description": "Luma Studio — Free photo and design editor by Larx Vo",
+  "author": {
+    "name": "Larx Vo",
+    "url": "https://vovinhlac.com"
+  },
+  "homepage": "https://vovinhlac.com",
+  "license": "MIT",
+  "main": "main.cjs",
+  "dependencies": {}
+}

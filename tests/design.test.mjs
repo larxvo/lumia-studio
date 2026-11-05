@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createCanvas,GlobalFonts} from '@napi-rs/canvas';
+import {TEMPLATES,makeTemplate} from '../dist/templates.js';
+import {validateDocument,createDocument,createLayer} from '../dist/model.js';
+import {Assets,renderDocument} from '../dist/renderer.js';
+import {confidenceMask} from '../dist/ai.js';
+globalThis.document={createElement:()=>createCanvas(1,1)};
+GlobalFonts.registerFromPath('dist/assets/InterVariable.woff2','Inter');
+test('all templates contain valid independently editable type and render actual pixels',()=>{for(const t of TEMPLATES){const d=makeTemplate(t.id);validateDocument(d);assert.ok(d.layers.some(l=>l.type==='text'&&l.name==='Headline'));const c=renderDocument(d,new Assets(),{scale:.1});assert.ok(c.getContext('2d').getImageData(4,4,1,1).data[3]>0);}});
+test('AI confidence conversion keeps foreground alpha, removes background and yields soft edges',()=>{const r=confidenceMask({width:3,height:1,values:new Float32Array([0,.5,1])});const p=r.canvas.getContext('2d').getImageData(0,0,3,1).data;assert.equal(p[3],0);assert.ok(p[7]>=127&&p[7]<=128);assert.equal(p[11],255);assert.ok(Math.abs(r.coverage-.5)<.001);});
+test('flipping an image changes its pixels while preserving layer geometry',()=>{const d=createDocument(8,4),a=new Assets(),source=createCanvas(8,4),x=source.getContext('2d');x.fillStyle='#ff0000';x.fillRect(0,0,4,4);x.fillStyle='#0000ff';x.fillRect(4,0,4,4);const uri=source.toDataURL();a.set(uri,source);d.layers=[createLayer('image',{source:uri,width:8,height:4,flipX:true})];const output=renderDocument(d,a).getContext('2d');assert.deepEqual([...output.getImageData(1,1,1,1).data],[0,0,255,255]);assert.equal(d.layers[0].x,0);});

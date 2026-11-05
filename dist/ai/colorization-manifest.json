@@ -1,0 +1,50 @@
+{
+  "id": "eccv16-w8",
+  "bytes": 32347931,
+  "sha256": "953dce79b48dfc35b5daaf15445693c1f70aea5510d5c856f6c6893fc6f152ba",
+  "parts": [
+    {
+      "file": "colorization.part1",
+      "bytes": 16777216,
+      "sha256": "4b4766878d6915f68be77814a43280af5b0668bef8f8cb320e84d7c42a4244da"
+    },
+    {
+      "file": "colorization.part2",
+      "bytes": 15570715,
+      "sha256": "34adc01e76df0020c3aa233616066a3cc7a637c7ae178f1a3a21f3618d2deade"
+    }
+  ],
+  "input": {
+    "name": "input",
+    "shape": [
+      1,
+      1,
+      256,
+      256
+    ],
+    "dtype": "float32",
+    "range": "CIE L* [0,100]"
+  },
+  "output": {
+    "name": "output",
+    "shape": [
+      1,
+      2,
+      256,
+      256
+    ],
+    "dtype": "float32",
+    "range": "CIE ab (unnormalized)"
+  },
+  "source": "https://github.com/clibdev/colorization/releases/tag/1.0.0",
+  "license": "BSD-2-Clause",
+  "upstreamSha256": "b4a4cecae9e84e776d665e85774815b0bb43de382813b02fb13144f8fd5d6c83",
+  "conversion": "Symmetric per-axis int8 stored weights with DequantizeLinear; float32 CPU computation retained.",
+  "smoke": {
+    "runtime": "onnxruntime-web1.30.0 CPU WASM single thread",
+    "input": "public-domain portrait-demo.jpg converted to grayscale",
+    "loadMs": 56,
+    "inferenceMs": 3683,
+    "abMeanAbsoluteErrorVsUpstream": 0.28683561086654663
+  }
+}

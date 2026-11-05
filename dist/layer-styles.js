@@ -1,0 +1,21 @@
+import {STYLE_DEFS,effectDefaultColor} from './layer-effects.js';
+import {clone,clamp} from './model.js';
+import {renderLayer} from './renderer.js';
+import {effectiveLocked} from './pro-model.js';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function openLayerStyles(api,initial='shadow'){
+ const l=api.layer();if(!l||l.type==='adjustment'){api.toast('Chọn lớp ảnh, chữ, hình hoặc nhóm để thêm hiệu ứng.');return;}
+ if(effectiveLocked(api.doc(),l)){api.toast('Mở khóa lớp trước khi chỉnh hiệu ứng.',true);return;}
+ const original=clone(l.effects||{});l.effects||={};let active=STYLE_DEFS.some(d=>d[0]===initial)?initial:'shadow';
+ const rollback=()=>{l.effects=original;api.renderUI();api.requestRender();};
+ api.showModal('Layer Style · Hiệu ứng lớp',l.name,`<div class="style-layout"><div class="style-list" id="style-list" role="tablist" aria-label="Layer effects"></div><div class="style-editor"><div id="style-controls"></div><p class="style-hint">Hiệu ứng giữ riêng trong dự án .luma. Có thể sửa lại, bật/tắt và Undo.</p></div><div class="style-preview-wrap"><img id="style-preview" alt="Xem trước hiệu ứng trực tiếp"><label><input id="style-live" type="checkbox" checked> Xem trên ảnh</label></div></div>`,[{label:'Hủy',run:()=>api.closeModal(true)},{label:'Áp dụng',primary:true,run:()=>{api.closeModal();api.commit('Layer styles');}}],()=>{
+ const root=document.querySelector('#modal-content'),$=s=>root.querySelector(s);
+ function preview(){const s=Math.min(1,480/Math.max(api.doc().width,api.doc().height)),c=renderLayer(api.doc(),l,api.assets,s);$('#style-preview').src=c.toDataURL();c.width=c.height=1;if($('#style-live').checked)api.requestRender();}
+ function render(){const e=l.effects,def=STYLE_DEFS.find(d=>d[0]===active),colorKey=active+'Color';
+ $('#style-list').innerHTML=STYLE_DEFS.map(([k,n,vi])=>`<div class="style-choice ${k===active?'active':''}"><input type="checkbox" ${k===active?'id="effect-enabled"':''} data-style-toggle="${k}" ${e[k]?'checked':''} aria-label="Enable ${n}"><button role="tab" aria-selected="${k===active}" data-style-tab="${k}">${n}<small>${vi}</small></button></div>`).join('');
+ $('#style-controls').innerHTML=`<h3>${def[1]}</h3>${active!=='bevel'?`<label class="style-field">Blend mode<select data-style-value="${active}Blend" aria-label="Effect blend mode">${['normal','multiply','screen','overlay','soft-light','color','luminosity'].map(b=>`<option ${b===(e[active+'Blend']||(['innerShadow','satin'].includes(active)?'multiply':active==='innerGlow'?'screen':'normal'))?'selected':''}>${b}</option>`).join('')}</select></label><label class="style-field">Color<input type="color" data-style-value="${colorKey}" value="${esc(e[colorKey]||effectDefaultColor(active))}" aria-label="Effect color"></label>`:''}${active==='gradientOverlay'?`<label class="style-field">End color<input type="color" data-style-value="gradientOverlayColor2" value="${esc(e.gradientOverlayColor2||'#376ba5')}" aria-label="Gradient end color"></label>`:''}${def[3].map(([k,n,min,max,f,unit])=>`<label class="style-range"><span>${n}<span><input type="number" data-style-value="${k}" min="${min}" max="${max}" value="${e[k]??f}" aria-label="${n}"> ${unit}</span></span><input type="range" data-style-value="${k}" min="${min}" max="${max}" value="${e[k]??f}" aria-label="${n} slider"></label>`).join('')}`;
+ root.querySelectorAll('[data-style-tab]').forEach(b=>b.onclick=()=>{active=b.dataset.styleTab;render();});root.querySelectorAll('[data-style-toggle]').forEach(b=>b.onchange=()=>{e[b.dataset.styleToggle]=b.checked;if(b.checked)e.stack=[...new Set([...(e.stack||[]),b.dataset.styleToggle])];preview();});
+ root.querySelectorAll('[data-style-value]').forEach(input=>input.oninput=()=>{const k=input.dataset.styleValue,v=['number','range'].includes(input.type)?clamp(Number(input.value),Number(input.getAttribute("min")),Number(input.getAttribute("max"))):input.value;if(typeof v==='number'&&!Number.isFinite(v))return;e[k]=v;root.querySelectorAll(`[data-style-value="${k}"]`).forEach(other=>{if(other!==input)other.value=v;});preview();});preview();}
+ $('#style-live').onchange=()=>{if($('#style-live').checked)api.requestRender();else{const edited=l.effects;l.effects=original;api.renderNow();l.effects=edited;}};render();
+ },rollback);
+}

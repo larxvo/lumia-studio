@@ -1,0 +1,20 @@
+{
+  "runtime": "real CPU/WASM DeepLab + SlimSAM global/local + LaMa",
+  "dimensions": [
+    1152,
+    1536
+  ],
+  "selectedRegions": 2,
+  "selectionMs": 32081,
+  "fillMs": 18390,
+  "outsideChangedPixels": 0,
+  "protectedPixels": 8691,
+  "protectedChangedPixels": 0,
+  "changedPixels": 35368,
+  "outsideChangedBytes": 0,
+  "detailSamples": 35275,
+  "originalResolution": true,
+  "limitation": "No ground truth exists for the occluded scene. Exterior equality is verified; realism needs visual review. Automatic nearby and vegetation hints are conservative heuristics, not guaranteed instance/occlusion classification.",
+  "fixture": "Private local evaluation; input, coordinates, masks and images intentionally excluded from the public release.",
+  "quality": "Functional/isolation check only. Dense occlusion and object fragments require visual review; no hidden-scene ground truth."
+}

@@ -1,0 +1,13 @@
+✔ source archive chunks reassemble byte-for-byte into a single downloadable ZIP (18.269502ms)
+✔ source download rejects missing/truncated parts rather than saving a broken archive (1.497372ms)
+✔ source download checks content integrity and rejects unexpected fetch paths (15.387077ms)
+✔ shared source packages reconstruct a standalone ZIP with code and exact model bytes (26.435742ms)
+✔ shared source reconstruction rejects traversal, duplicate namespaces and altered model bytes (6.120743ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 5
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 349.878542

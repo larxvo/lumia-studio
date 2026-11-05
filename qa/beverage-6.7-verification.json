@@ -1,0 +1,72 @@
+{
+  "darkPrintProposal": {
+    "source": "Generated Canvas illustration with DEMO print; no user photo",
+    "runtime": "Real CPU/WASM SlimSAM + LaMa; native color/background engine",
+    "dimensions": [
+      650,
+      850
+    ],
+    "selectionMs": 11592,
+    "bestCandidate": 1,
+    "maskIoUWithKnownSyntheticSilhouette": 0.9430272693518887,
+    "inkPixels": 7796,
+    "cleanupMs": 37303,
+    "cleanupOutsideMaskChangedPixels": 0,
+    "cleanupAlphaChangedPixels": 0,
+    "renders": [
+      {
+        "preset": "natural",
+        "renderMs": 362
+      },
+      {
+        "preset": "studio",
+        "renderMs": 300
+      },
+      {
+        "preset": "garden",
+        "renderMs": 398
+      },
+      {
+        "preset": "golden",
+        "renderMs": 391
+      }
+    ],
+    "limits": "This is functional evidence on one illustration. It does not establish photorealistic removal of real ink, logo recognition/OCR, transparent refraction reconstruction, GPU performance, or exact recovery of obscured details. Inspect output and refine the print mask manually.",
+    "knownMaskRevision": "Initial illustrative mask before opaque-lid union correction; final mask comparison is in reviewedFullLabel."
+  },
+  "reviewedFullLabel": {
+    "source": "Generated Canvas illustration with DEMO print; no user photo",
+    "runtime": "Real CPU/WASM SlimSAM + LaMa; native color/background engine",
+    "dimensions": [
+      650,
+      850
+    ],
+    "printMask": "reviewed rectangle",
+    "selectionMs": 13579,
+    "bestCandidate": 1,
+    "maskIoUWithKnownSyntheticSilhouette": 0.9866415493877664,
+    "inkPixels": 40577,
+    "cleanupMs": 36113,
+    "cleanupOutsideMaskChangedPixels": 0,
+    "cleanupAlphaChangedPixels": 0,
+    "renders": [
+      {
+        "preset": "natural",
+        "renderMs": 399
+      },
+      {
+        "preset": "studio",
+        "renderMs": 253
+      },
+      {
+        "preset": "garden",
+        "renderMs": 419
+      },
+      {
+        "preset": "golden",
+        "renderMs": 380
+      }
+    ],
+    "limits": "This is functional evidence on one illustration. It does not establish photorealistic removal of real ink, logo recognition/OCR, transparent refraction reconstruction, GPU performance, or exact recovery of obscured details. Inspect output and refine the print mask manually."
+  }
+}
