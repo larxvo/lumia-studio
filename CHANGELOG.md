@@ -1,5 +1,13 @@
 # Changelog
 
+## 9.0.2 — Usable layer panels on laptop screens
+
+- Fix the layer stack collapsing to a 6-pixel scroll area at 1280 × 720. The upper inspectors and lower panels now have independent, bounded layouts.
+- Add a draggable horizontal divider above Layers / Channels / Paths / History, keyboard resizing, saved proportions and double-click reset.
+- Keep the layer controls/footer accessible and show a visible layer scrollbar. Preserve the list position while selecting layers or updating effects.
+- Keep panel scroll keys from moving artwork. Reuse the existing undo/redo and document format behavior.
+- Provide a refreshed Windows installer and actual browser-layout and Windows packaging reports. Physical-GPU and full native-format compatibility boundaries are unchanged.
+
 ## 9.0.1 — GitHub distribution
 
 - Present the application through screenshots and Larx Vo attribution; remove hosted demo links and the obsolete source-import dependency.

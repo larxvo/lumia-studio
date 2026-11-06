@@ -1,4 +1,19 @@
 /* Desktop workspace: one context inspector, one inspection strip, one layer stack. */
+#dock{min-height:0}
+#dock .dock-inspectors{display:flex;flex-direction:column;flex:1 1 0;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#71857c #1a2427}
+#dock .dock-inspectors #properties{height:auto;max-height:none;min-height:96px;flex:1 1 180px}
+#dock .dock-inspectors>.properties-tabs,#dock .dock-inspectors>.color-section,#dock .dock-inspectors>.navigator-section{flex-shrink:0}
+#dock .layers-section{flex:0 0 var(--layers-height,50%);min-height:0;max-height:none}
+#dock #layers-panel{overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#71857c #1a2427}
+#dock #layer-list{flex:1 0 96px;min-height:96px;overflow-y:scroll;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:auto;scrollbar-color:#71857c #1a2427}
+#dock #history-list,#dock .inspector-list{overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable;scrollbar-width:auto;scrollbar-color:#71857c #1a2427}
+#dock .layer-fill-row,#dock .layer-part-locks,#dock .layer-search-row,#dock .layer-selection-note{flex-shrink:0}
+.dock-height-resizer{height:8px;min-height:8px;flex:none;position:relative;cursor:ns-resize;touch-action:none;background:#1b2428;border-top:1px solid #3a4749;border-bottom:1px solid #3a4749}
+.dock-height-resizer:after{content:'';position:absolute;left:calc(50% - 19px);top:2px;width:38px;height:2px;border-radius:2px;background:#79968a}
+.dock-height-resizer:hover,.dock-height-resizer:focus-visible{background:#35564a;outline:0}
+.dock-height-resizer:hover:after,.dock-height-resizer:focus-visible:after{background:var(--mint)}
+#dock.is-resizing-height,#dock.is-resizing-height *{cursor:ns-resize!important;user-select:none!important}
+#dock .dock-inspectors:focus-visible,#dock #layer-list:focus-visible,#dock #history-list:focus-visible,#dock .inspector-list:focus-visible{outline:1px solid var(--mint);outline-offset:-2px}
 .workspace-picker{display:flex;align-items:center;gap:7px;border:1px solid #3a4447;background:#20292a;border-radius:5px;padding:0 5px 0 9px;height:31px;margin-right:8px;color:#b4d7cc;flex:none}
 .workspace-picker svg{width:14px;height:14px}.workspace-picker select{border:0;background:transparent;font-size:11px;width:88px;padding:4px;color:inherit}
 .dock{width:var(--dock-width,336px);position:relative}.dock-resizer{position:absolute;z-index:20;left:0;top:0;bottom:0;width:5px;cursor:ew-resize}.dock-resizer:hover,.dock-resizer:focus-visible{background:#a5e4d160;outline:0}

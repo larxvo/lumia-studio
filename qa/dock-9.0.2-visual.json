@@ -1,0 +1,120 @@
+{
+  "schema": "luma-dock-visual-qa-v1",
+  "version": "9.0.2",
+  "baseline": {
+    "version": "9.0.1",
+    "viewport": "1280x720",
+    "listHeight": 6
+  },
+  "interactions": {
+    "layerCount": 32,
+    "bottomWheelScrollTop": 1440,
+    "selectedBottomLayer": "The Great Wave",
+    "scrollTopAfterSelection": 1440,
+    "draggedHeight": 473,
+    "keyboardHeight": 449,
+    "restoredHeight": 449,
+    "resetHeight": 340
+  },
+  "viewports": [
+    {
+      "viewport": "1280x720",
+      "footerWithinDock": true,
+      "layerPanelHeight": 340,
+      "listHeight": 102,
+      "rows": 32,
+      "visibleListHeight": 102.21875
+    },
+    {
+      "viewport": "1024x600",
+      "footerWithinDock": true,
+      "layerPanelHeight": 340,
+      "listHeight": 102,
+      "rows": 32,
+      "visibleListHeight": 102.21875
+    },
+    {
+      "viewport": "1360x768",
+      "footerWithinDock": true,
+      "layerPanelHeight": 342,
+      "listHeight": 104,
+      "rows": 32,
+      "visibleListHeight": 104.03125
+    },
+    {
+      "viewport": "1280x540",
+      "footerWithinDock": true,
+      "layerPanelHeight": 333,
+      "listHeight": 96,
+      "rows": 32,
+      "visibleListHeight": 95.21875
+    },
+    {
+      "viewport": "1280x860",
+      "footerWithinDock": true,
+      "layerPanelHeight": 392,
+      "listHeight": 154,
+      "rows": 32,
+      "visibleListHeight": 153.71875
+    }
+  ],
+  "workspaces": [
+    {
+      "workspace": "photo",
+      "height": 102,
+      "rows": 48
+    },
+    {
+      "workspace": "design",
+      "height": 102,
+      "rows": 48
+    },
+    {
+      "workspace": "retouch",
+      "height": 102,
+      "rows": 48
+    }
+  ],
+  "history": {
+    "entries": 17,
+    "height": 303,
+    "scrollHeight": 558,
+    "scrollTop": 255
+  },
+  "otherPanels": [
+    {
+      "panel": "channels",
+      "actions": 6,
+      "height": 303,
+      "hidden": false,
+      "scrollHeight": 361,
+      "scrollTop": 58
+    },
+    {
+      "panel": "paths",
+      "actions": 6,
+      "height": 303,
+      "hidden": false,
+      "scrollHeight": 425,
+      "scrollTop": 122
+    }
+  ],
+  "colorExpandedListHeight": 102,
+  "keyboardScroll": {
+    "max": 2208,
+    "scrollTop": 2208
+  },
+  "undoRedo": {
+    "before": "48",
+    "undo": "47",
+    "redo": "48"
+  },
+  "finalPanel": {
+    "height": 198,
+    "rows": 48,
+    "scrollTop": 2112,
+    "selected": "Caption card"
+  },
+  "scope": "Actual Chromium renderer with UI input, five iframe viewports, three workspaces and 32/48-layer fixtures. Native Windows packaging/install tests are reported separately.",
+  "status": "passed"
+}

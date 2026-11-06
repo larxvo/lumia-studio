@@ -6,7 +6,7 @@
 2. Compare the file's SHA-256 with the accompanying `.sha256` file. In PowerShell:
 
    ```powershell
-   Get-FileHash .\Luma-Studio-9.0.1-Setup-x64.exe -Algorithm SHA256
+   Get-FileHash .\Luma-Studio-9.0.2-Setup-x64.exe -Algorithm SHA256
    ```
 
 3. Run setup for your Windows account. Choose an empty folder or an existing Luma installation. The editor does not need Node.js or Python installed separately.
@@ -32,6 +32,14 @@ The Windows/NVIDIA companion scripts in `gpu-kit/` are separate from the editor 
 ## Optional Canva
 
 See [Canva setup](CANVA.md). The current connector needs a configured Canva Developer app; it is not yet a turnkey shared public OAuth service.
+
+## Layer panels
+
+Version 9.0.2 fixes the layer list becoming too small to use on laptop displays. Scroll over the layer list or drag its scrollbar to reach lower layers. Drag the horizontal handle directly above **Lớp / Kênh / Đường / Lịch sử** upward to enlarge those panels, or downward to give the inspectors more space. The app remembers the proportion and adjusts it when the window changes size.
+
+Double-click the handle to restore the default split. With the handle focused, use Up/Down or Page Up/Page Down to resize it; Enter resets it. **Cửa sổ → Khôi phục bố trí mặc định** restores all workspace layout preferences.
+
+![Resizable layer dock with visible scrollbar](../qa/layers-9.0.2-720.png)
 
 ## Troubleshooting
 

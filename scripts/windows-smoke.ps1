@@ -8,7 +8,7 @@ $main = Join-Path $installRoot 'Luma Studio.exe'
 if (-not (Test-Path $main)) { throw 'Application was not installed.' }
 $registry = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\LumaStudio'
 $entry = Get-ItemProperty $registry
-if ($entry.Publisher -ne 'Larx Vo' -or $entry.DisplayVersion -ne '9.0.1') { throw 'Publisher/version registry mismatch.' }
+if ($entry.Publisher -ne 'Larx Vo' -or $entry.DisplayVersion -ne '9.0.2') { throw 'Publisher/version registry mismatch.' }
 $version = (Get-Item $main).VersionInfo
 if ($version.ProductName -ne 'Luma Studio') { throw 'Windows PE metadata mismatch.' }
 # A user-created file must survive manifest-based application removal.
@@ -19,8 +19,8 @@ for ($i=0; $i -lt 60; $i++) { if (-not (Test-Path $main)) { break }; Start-Sleep
 if (Test-Path $main) { throw 'Application was not removed within 30 seconds.' }
 if (Test-Path $registry) { throw 'Removal registry key was not cleared.' }
 if (-not (Test-Path $sentinel)) { throw 'Removal deleted unrelated user data.' }
-$report = [ordered]@{schema='luma-windows-smoke-v1';status='passed';version='9.0.1';runner=$env:ImageOS;os=[Environment]::OSVersion.VersionString;installed=$true;uninstalled=$true;publisher='Larx Vo';unrelatedFilePreserved=$true;interactiveEditorTested=$false;gpuQualityVerified=$false;scope='Silent install/removal and metadata on a GitHub-hosted Windows VM; no interactive editing or GPU inference.'}
-$report | ConvertTo-Json -Depth 5 | Set-Content 'qa/windows-9.0.1-smoke.json'
+$report = [ordered]@{schema='luma-windows-smoke-v1';status='passed';version='9.0.2';runner=$env:ImageOS;os=[Environment]::OSVersion.VersionString;installed=$true;uninstalled=$true;publisher='Larx Vo';unrelatedFilePreserved=$true;interactiveEditorTested=$false;gpuQualityVerified=$false;scope='Silent install/removal and metadata on a GitHub-hosted Windows VM; no interactive editing or GPU inference.'}
+$report | ConvertTo-Json -Depth 5 | Set-Content 'qa/windows-9.0.2-smoke.json'
 $releasePath = 'releases/windows/release.json'
 $release = Get-Content $releasePath -Raw | ConvertFrom-Json
 $release.nativeWindowsRuntimeTest = 'silent-install-removal-passed'

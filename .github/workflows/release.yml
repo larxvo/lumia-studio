@@ -89,15 +89,15 @@ jobs:
         run: node scripts/verify-windows.mjs
       - name: Silent installation and removal on Windows
         shell: pwsh
-        run: ./scripts/windows-smoke.ps1 -Installer ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe
+        run: ./scripts/windows-smoke.ps1 -Installer ./releases/windows/Luma-Studio-9.0.2-Setup-x64.exe
       - name: Assemble complete source archive
         shell: pwsh
         run: |
           python scripts/package-source.py
           if ($LASTEXITCODE -ne 0) { throw 'Source packaging failed.' }
-          $source = 'releases/luma-studio-9.0.1-source.zip'
+          $source = 'releases/luma-studio-9.0.2-source.zip'
           $hash = (Get-FileHash -Algorithm SHA256 $source).Hash.ToLowerInvariant()
-          "$hash  luma-studio-9.0.1-source.zip" | Set-Content "$source.sha256" -Encoding ascii
+          "$hash  luma-studio-9.0.2-source.zip" | Set-Content "$source.sha256" -Encoding ascii
       - name: Publish versioned installer, source and evidence
         shell: pwsh
         env:
@@ -105,13 +105,13 @@ jobs:
           SOURCE_SHA: ${{ needs.source.outputs.sha }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $tag = 'v9.0.1'
+          $tag = 'v9.0.2'
           @'
-          Luma Studio 9.0.1 — free photo and design editor by Larx Vo · https://vovinhlac.com.
+          Luma Studio 9.0.2 — free photo and design editor by Larx Vo · https://vovinhlac.com.
 
           Download the x64 Setup.exe, verify its SHA-256, then install for the current Windows user. The complete source ZIP includes the editor, local model/runtime assets and their notices. No separate Node/Python is needed for normal editing.
 
-          This release adds professional repository documentation, automated source/format tests and a Windows installer/payload/install-removal pipeline. It fixes silent-mode forwarding in the removal helper and Windows archive verification. Public presentation uses application screenshots and Larx Vo branding; companion downloads now use checksum-verified GitHub Release assets.
+          This patch fixes the Layers list collapsing on laptop-height windows. It adds a draggable, keyboard-accessible divider above Layers / Channels / Paths / History, remembers the split, keeps panels independently scrollable and preserves the layer-list position during edits. Drag the divider upward to give layers more room; double-click it to reset. Public presentation uses application screenshots and Larx Vo branding.
 
           Read the attached payload and Windows smoke reports for actual validation. Installation/removal is exercised on a GitHub-hosted Windows VM; interactive editing on Windows, live Canva OAuth and physical-GPU generative quality remain separate and incomplete validations. The installer is unsigned. PSD/PSB support is RGB 8-bit with explicit subsets; native Canva editing occurs in Canva with PNG interchange into Luma.
 
@@ -122,20 +122,20 @@ jobs:
             $existing = Get-Content release-existing.json -Raw | ConvertFrom-Json
             if (-not $existing.isDraft -or $existing.targetCommitish -ne $env:SOURCE_SHA) { throw 'Refusing to replace a published release or a different source commit.' }
           } else {
-            gh release create $tag --repo $env:GITHUB_REPOSITORY --draft --target $env:SOURCE_SHA --title 'Luma Studio 9.0.1 — Windows x64 & source' --notes-file release-notes.md
+            gh release create $tag --repo $env:GITHUB_REPOSITORY --draft --target $env:SOURCE_SHA --title 'Luma Studio 9.0.2 — Windows x64 & source' --notes-file release-notes.md
             if ($LASTEXITCODE -ne 0) { throw 'Unable to create release draft.' }
           }
-          gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe.sha256 ./releases/windows/release.json ./releases/luma-studio-9.0.1-source.zip ./releases/luma-studio-9.0.1-source.zip.sha256 ./qa/platform9-windows-verification.json ./qa/windows-9.0.1-smoke.json
+          gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber ./releases/windows/Luma-Studio-9.0.2-Setup-x64.exe ./releases/windows/Luma-Studio-9.0.2-Setup-x64.exe.sha256 ./releases/windows/release.json ./releases/luma-studio-9.0.2-source.zip ./releases/luma-studio-9.0.2-source.zip.sha256 ./qa/platform9-windows-verification.json ./qa/windows-9.0.2-smoke.json
           if ($LASTEXITCODE -ne 0) { throw 'Unable to upload release assets.' }
           gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest
           if ($LASTEXITCODE -ne 0) { throw 'Unable to publish release.' }
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: always()
         with:
-          name: windows-9.0.1-evidence
+          name: windows-9.0.2-evidence
           path: |
             qa/*windows*.json
-            qa/windows-9.0.1-smoke.json
+            qa/windows-9.0.2-smoke.json
             releases/windows/release.json
           if-no-files-found: warn
           retention-days: 14
