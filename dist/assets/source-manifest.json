@@ -1,12 +1,12 @@
 {
   "layout": "shared-assets-v1",
   "filename": "luma-studio-9.0.1-source.zip",
-  "bytes": 12206487,
+  "bytes": 12202356,
   "parts": [
     {
       "file": "luma-source.part1",
-      "bytes": 12206487,
-      "sha256": "4ff4682f46e270c57e3fdb2bde4747d16fc0c5790348250cc018c1e9b5a87b25"
+      "bytes": 12202356,
+      "sha256": "8f8a55d4f7921e7b8c5405e26047a268d677e80787887d4a88cf297de2d41419"
     }
   ],
   "assets": [
