@@ -216,8 +216,8 @@ function renderUI() {
 function renderLayers() {
   const d = doc();
   if (!d) return;
-  const list = $("#layer-list"), scrollTop = list.dataset.document === d.id ? list.scrollTop : 0;
-  list.dataset.document = d.id;
+  const list = $("#layer-list"), scrollTop = list.dataset.layerDocument === d.id ? list.scrollTop : 0;
+  list.dataset.layerDocument = d.id;
   const selection = selected(d), selectedSet = new Set(selection.map((l) => l.id)), query = layerQuery.toLowerCase(), matches = (l) => (!query || l.name.toLowerCase().includes(query)) && (layerKind === "all" || l.type === layerKind), allowed = new Set(d.layers.filter(matches).flatMap((l) => [l.id, ...ancestors(d, l).map((a) => a.id)]));
   const ordered = [];
   function walk(parent = null, depth = 0) {

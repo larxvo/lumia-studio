@@ -1,4 +1,5 @@
 name: Windows release
+# Build and publish only after the complete editor checks pass.
 on:
   push:
     branches: [main]
