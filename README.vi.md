@@ -29,6 +29,13 @@ Công cụ tự động vẫn có thể cần sửa viền tóc, ngón tay, vậ
 
 Bộ cài hiện **chưa ký số**. Kết quả kiểm tra dữ liệu đóng gói, cài/gỡ trên runner Windows và kiểm thử giao diện/GPU được báo cáo riêng. Xem [hướng dẫn cài đặt](docs/INSTALLATION.md) và báo cáo của từng release.
 
+
+## Ảnh chụp ứng dụng
+
+Ảnh chụp trực tiếp giao diện Luma Studio theo phiên bản hiển thị, giúp xem các công cụ và bố cục ứng dụng.
+
+![Layer styles, editable effects and contextual controls](qa/desktop-7.2-styles.png)
+
 ## Phạm vi tương thích
 
 | Hạng mục | Trạng thái |

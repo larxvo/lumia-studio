@@ -37,13 +37,13 @@ node scripts/verify-windows.mjs
 
 `scripts/build-windows.mjs` packages the shared editor with Electron, edits Windows PE metadata, and compiles NSIS setup/removal executables. Build tools are resolved through the pinned electron-builder dependency. There is no signing certificate or private Canva secret in the repository. Packaging outputs go under ignored `releases/windows/`.
 
-The source distribution is assembled by `python scripts/package-source.py`; `python scripts/package-gpu-kit.py` updates the companion ZIP. Source-download tests need the generated manifest/parts. GitHub CI generates these before checks and packaging.
+The source distribution is assembled by `python scripts/package-source.py`; `python scripts/package-gpu-kit.py` updates the companion ZIP. Generate both before distributing a self-hosted editor so its source-download and GPU-kit buttons have current files. GitHub CI regenerates them before checks and packaging. On Windows, payload verification requires the full 7-Zip installation (`7z.exe`), including its NSIS reader; the reduced `7za.exe` build does not provide that reader. Set `LUMA_7ZIP` to override the full executable's path.
 
 ## CI and release
 
 - CI uses read-only repository access and SHA-pinned official GitHub actions.
 - Pull requests run the sequential JavaScript and Python suites and regenerate the format bridges.
-- The first import workflow restores the previously published, checksum-pinned source snapshot. Existing reviewed repository files take precedence. No app secrets are requested.
+- The release workflow builds from the repository's exact commit, regenerates download bundles, runs checks and commits only those generated distribution files before Windows packaging. It has no external source-host dependency.
 - A Windows runner builds the installer, checks every extracted payload file against source, and runs a per-user silent install/removal smoke check.
 - Release publication uses a repository-scoped `GITHUB_TOKEN` with `contents: write`; no personal access token is stored.
 - Release assets include setup, checksum, complete source ZIP and verification reports. A passing packaging job is not a GPU-quality certification or a code-signing certificate.

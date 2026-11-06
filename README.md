@@ -48,6 +48,13 @@ Installers are currently **unsigned**. Archive/payload verification and Windows 
 
 Automatic selection can need correction around hair, fingers, transparent materials and overlapping people. Inpainting creates plausible content rather than proving what was originally hidden. Studio/art effects and neural inference are distinguished in the detailed guides.
 
+
+## Application screenshots
+
+Captured in Luma Studio. Screenshots document the displayed build; they are not generated interface mockups.
+
+![Layer styles, editable effects and contextual controls](qa/desktop-7.2-styles.png)
+
 ## Formats and integrations
 
 | Area | Supported path | Important boundary |

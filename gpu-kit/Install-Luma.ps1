@@ -43,31 +43,25 @@ if ($LASTEXITCODE -ne 0) { throw 'CUDA khong vuot phep tinh kiem chung. Khong ch
 $proof | Set-Content (Join-Path $runtime 'cuda-proof.json') -Encoding UTF8
 Write-Host ($proof -join [Environment]::NewLine)
 
-$origin = 'https://luma-photo-studio.tuhaotp.chatgpt.site'
-$manifest = Invoke-RestMethod -Uri "$origin/assets/source-manifest.json"
-if ($manifest.filename -notmatch '^luma-studio-[0-9.]+-source\.zip$' -or $manifest.parts.Count -lt 1 -or $manifest.parts.Count -gt 16 -or $manifest.bytes -gt 268435456) { throw 'Manifest Luma khong hop le.' }
-$zipPath = Join-Path $download $manifest.filename
-$output = [IO.File]::Open($zipPath, [IO.FileMode]::Create, [IO.FileAccess]::Write)
-try {
-    $total = 0L
-    foreach ($part in $manifest.parts) {
-        if ($part.file -notmatch '^luma-source\.part([1-9]|1[0-6])$' -or $part.bytes -lt 1 -or $part.bytes -gt 16777216 -or $part.sha256 -notmatch '^[0-9a-f]{64}$') { throw 'Source part khong hop le.' }
-        $partPath = Join-Path $download $part.file
-        Write-Host "Dang tai ma nguon $($part.file)..."
-        Invoke-WebRequest -Uri "$origin/assets/$($part.file)" -OutFile $partPath -UseBasicParsing
-        if ((Get-Item $partPath).Length -ne $part.bytes -or (Get-FileHash -Algorithm SHA256 $partPath).Hash.ToLowerInvariant() -ne $part.sha256) { throw 'Source part bi loi / khong dung SHA-256.' }
-        $inputStream = [IO.File]::OpenRead($partPath)
-        try { $inputStream.CopyTo($output) } finally { $inputStream.Dispose() }
-        $total += $part.bytes
-    }
-    if ($total -ne $manifest.bytes) { throw 'Tong kich thuoc source ZIP khong khop.' }
-} finally { $output.Dispose() }
+# The complete repository snapshot is distributed through versioned GitHub Releases.
+$lumaRelease = Invoke-RestMethod -Uri 'https://api.github.com/repos/larxvo/lumia-studio/releases/latest' -Headers @{ 'User-Agent' = 'Luma-Local-GPU-Setup' }
+$lumaAssets = @($lumaRelease.assets | Where-Object { $_.name -match '^luma-studio-[0-9]+\.[0-9]+\.[0-9]+-source\.zip$' })
+if ($lumaAssets.Count -ne 1) { throw 'Chua co source ZIP day du trong GitHub Releases. Hay tai ban phat hanh chinh thuc.' }
+$lumaAsset = $lumaAssets[0]
+if ($lumaAsset.digest -notmatch '^sha256:[0-9a-f]{64}$' -or $lumaAsset.size -lt 1 -or $lumaAsset.size -gt 2147483647) { throw 'Source ZIP thieu SHA-256 hoac kich thuoc khong hop le.' }
+if ($lumaAsset.browser_download_url -notmatch '^https://github\.com/larxvo/lumia-studio/releases/download/[^/]+/luma-studio-[0-9.]+-source\.zip$') { throw 'Nguon tai Luma khong hop le.' }
+$zipPath = Join-Path $download $lumaAsset.name
+Write-Host "Dang tai Luma $($lumaRelease.tag_name) tu GitHub Releases..."
+Invoke-WebRequest -Uri $lumaAsset.browser_download_url -OutFile $zipPath -UseBasicParsing
+$sourceHash = $lumaAsset.digest.Substring(7)
+if ((Get-Item $zipPath).Length -ne $lumaAsset.size -or (Get-FileHash -Algorithm SHA256 $zipPath).Hash.ToLowerInvariant() -ne $sourceHash) { throw 'Source ZIP SHA-256 / kich thuoc khong khop. Khong giai nen / chay.' }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$versionRoot = Join-Path $runtime ($manifest.filename -replace '-source\.zip$', '')
+$versionRoot = Join-Path $runtime (($lumaAsset.name -replace '-source\.zip$', '') + '-' + $sourceHash.Substring(0,12))
 if (-not (Test-Path $versionRoot)) {
     $zip = [IO.Compression.ZipFile]::OpenRead($zipPath)
     try {
         foreach ($entry in $zip.Entries) {
+            if ($entry.FullName -notmatch '^luma-studio/' -or $entry.FullName -match '\\') { throw 'Source ZIP root khong hop le.' }
             $destination = [IO.Path]::GetFullPath((Join-Path $versionRoot $entry.FullName))
             if (-not $destination.StartsWith([IO.Path]::GetFullPath($versionRoot) + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'ZIP path khong hop le.' }
         }
@@ -75,27 +69,10 @@ if (-not (Test-Path $versionRoot)) {
     [IO.Compression.ZipFile]::ExtractToDirectory($zipPath, $versionRoot)
 }
 $editor = Join-Path $versionRoot 'luma-studio'
-if ($manifest.layout -and $manifest.layout -ne 'shared-assets-v1') { throw 'Source layout chua duoc ho tro.' }
-if ($manifest.layout -eq 'shared-assets-v1') {
-    if ($manifest.assets.Count -gt 64) { throw 'Qua nhieu source assets.' }
-    $assetTotal = 0L
-    foreach ($shared in $manifest.assets) {
-        if ($shared.asset -notmatch '^(ai|vendor)/[a-zA-Z0-9._/-]+$' -or $shared.asset -match '(^|/)\.{1,2}(/|$)' -or $shared.path -ne ('luma-studio/dist/' + $shared.asset) -or $shared.bytes -lt 1 -or $shared.bytes -gt 16777216 -or $shared.sha256 -notmatch '^[a-f0-9]{64}$') { throw 'Source asset khong hop le.' }
-        $assetTotal += $shared.bytes
-        if ($assetTotal -gt 268435456) { throw 'Source assets vuot gioi han.' }
-        $assetPath = [IO.Path]::GetFullPath((Join-Path (Join-Path $editor 'dist') $shared.asset))
-        if (-not $assetPath.StartsWith([IO.Path]::GetFullPath((Join-Path $editor 'dist')) + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw 'Asset path khong hop le.' }
-        if ((Test-Path $assetPath) -and (Get-Item $assetPath).Length -eq $shared.bytes -and (Get-FileHash -Algorithm SHA256 $assetPath).Hash.ToLowerInvariant() -eq $shared.sha256) { continue }
-        New-Item -ItemType Directory -Path ([IO.Path]::GetDirectoryName($assetPath)) -Force | Out-Null
-        Write-Host "Dang tai model / runtime $($shared.asset)..."
-        Invoke-WebRequest -Uri "$origin/$($shared.asset)" -OutFile $assetPath -UseBasicParsing
-        if ((Get-Item $assetPath).Length -ne $shared.bytes -or (Get-FileHash -Algorithm SHA256 $assetPath).Hash.ToLowerInvariant() -ne $shared.sha256) { throw 'Source asset SHA-256 khong khop.' }
-    }
-}
-if (-not (Test-Path (Join-Path $editor 'dist/local-runtime.js'))) { throw 'Ma nguon web chua co Local GPU 6.1. Cho ban phat hanh 6.1 duoc dua len trang roi chay lai.' }
-# Restore the verified source download parts for offline self-hosting.
-Copy-Item (Join-Path $download 'luma-source.part*') (Join-Path $editor 'dist/assets') -Force
-$manifest | ConvertTo-Json -Depth 8 | Set-Content (Join-Path $editor 'dist/assets/source-manifest.json') -Encoding UTF8
+if (-not (Test-Path (Join-Path $editor 'dist/local-runtime.js'))) { throw 'Source ZIP khong co Local GPU runtime.' }
+# Generate local download bundles from the verified complete repository snapshot.
+& $python -s (Join-Path $editor 'scripts/package-source.py')
+if ($LASTEXITCODE -ne 0) { throw 'Khong tao duoc source download cho may local.' }
 $deps = Join-Path $runtime 'research-deps'
 if ($Research) {
     New-Item -ItemType Directory -Path $deps -Force | Out-Null

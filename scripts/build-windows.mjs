@@ -1,4 +1,4 @@
-// Build a complete offline Windows installer on Linux without executing Windows code.
+// Build a complete offline Windows installer on Windows or by cross-compiling on Linux.
 // Both setup and removal executables are compiled directly with the official NSIS toolset.
 import {spawn} from 'node:child_process';
 import {readFile,writeFile,mkdir,readdir,stat,copyFile} from 'node:fs/promises';
@@ -177,7 +177,7 @@ SectionEnd
 async function listFiles(root,current=''){const result=[];for(const e of await readdir(path.join(root,current),{withFileTypes:true})){const rel=path.posix.join(current,e.name);if(e.isSymbolicLink())throw Error('Symlinks are not allowed in Windows payload.');if(e.isDirectory())result.push(...await listFiles(root,rel));else result.push(rel);}return result.sort();}
 async function main(){
  const {version}=JSON.parse(await readFile(path.join(root,'package.json'),'utf8'));
- await run(process.execPath,[require.resolve('electron-builder/cli.js'),'--config','desktop/electron-builder.cjs','--win','--x64','--dir']);
+ await run(process.execPath,[require.resolve('electron-builder/cli.js'),'--config','desktop/electron-builder.cjs','--win','--x64','--dir','--publish','never']);
  const out=path.join(root,'releases/windows'),payload=path.join(out,'win-unpacked');
  const files=await listFiles(payload),scripts=renderInstaller({version,payload,out,files,icon:path.join(root,'desktop/resources/luma.ico'),license:path.join(root,'LICENSE')});
  const staging=path.join(out,'nsis');await mkdir(staging,{recursive:true});

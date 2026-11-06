@@ -1,6 +1,6 @@
 # Art Studio crab demo
 
-`art-crab.png` is an original AI-generated photographic-style demonstration asset created with the built-in OpenAI image generation tool for Luma Studio. It is not a camera photograph, a biological reference, an image from the user's attachments, or a result produced by Luma's own filters. No screenshot, social-media interface, logo or copyrighted crab photograph was supplied as an image-generation input.
+`art-crab.png` is original AI-generated demonstration artwork for Luma Studio. It is not a camera photograph, a biological reference, an image from the user's attachments, or a result produced by Luma's own filters. No screenshot, social-media interface, logo or copyrighted crab photograph was supplied as an image-generation input.
 
 ## Generation prompt
 

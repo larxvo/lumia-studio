@@ -1,12 +1,15 @@
 import {createRequire} from 'node:module';import {spawn} from 'node:child_process';
-import {readFile,writeFile,mkdir,readdir,rm} from 'node:fs/promises';import {createHash} from 'node:crypto';import path from 'node:path';import {fileURLToPath} from 'node:url';
+import {readFile,writeFile,mkdir,readdir,rm,access} from 'node:fs/promises';import {createHash} from 'node:crypto';import path from 'node:path';import {fileURLToPath} from 'node:url';
 const require=createRequire(import.meta.url),root=fileURLToPath(new URL('..',import.meta.url)),out=path.join(root,'releases/windows');
 const {getPath7za}=require('app-builder-lib/out/toolsets/7zip.js'),asar=require('@electron/asar'),{NtExecutable,NtExecutableResource,Resource}=require('resedit');
 const run=(file,args)=>new Promise((resolve,reject)=>{const p=spawn(file,args,{cwd:root,stdio:'inherit'});p.on('error',reject);p.on('exit',n=>n===0?resolve():reject(Error('Archive check failed: '+n)));});
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const release=JSON.parse(await readFile(path.join(out,'release.json'),'utf8')),installer=path.join(out,release.filename),bytes=await readFile(installer);
 if(hash(bytes)!==release.sha256||bytes.length!==release.bytes||bytes.readUInt16LE(0)!==0x5a4d)throw Error('Installer integrity mismatch.');
-const seven=await getPath7za();await run(seven,['t','-bso0','-bsp0',installer]);
+// Windows' reduced 7za build omits the NSIS reader. Use the full 7-Zip tool.
+const seven=process.env.LUMA_7ZIP||(process.platform==='win32'?path.join(process.env.ProgramFiles||'C:\\Program Files','7-Zip','7z.exe'):await getPath7za());
+try{await access(seven);}catch{throw Error('Full 7-Zip is required for NSIS verification. Install 7-Zip or set LUMA_7ZIP.');}
+await run(seven,['t','-tNsis','-bso0','-bsp0',installer]);
 const extracted=path.join(out,'verify-extracted');await rm(extracted,{recursive:true,force:true});await mkdir(extracted,{recursive:true});await run(seven,['x','-y','-bso0','-bsp0','-o'+extracted,installer]);
 async function files(root,current=''){const result=[];for(const e of await readdir(path.join(root,current),{withFileTypes:true})){const r=path.posix.join(current,e.name);if(e.isDirectory())result.push(...await files(root,r));else result.push(r);}return result;}
 const unpacked=path.join(out,'win-unpacked'),expected=await files(unpacked);let checkedBytes=0;

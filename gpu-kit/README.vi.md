@@ -1,5 +1,6 @@
 # Luma Local GPU — Windows x64 + NVIDIA
 
+Bộ cài tải toàn bộ mã nguồn và model/runtime từ GitHub Releases của `larxvo/lumia-studio`, kiểm tra SHA-256 trước khi giải nén. Không phụ thuộc máy chủ demo.
 Bộ này cài / nối ComfyUI Portable chính thức, mở Luma từ máy bạn, kiểm tra CUDA thực và có công cụ xếp hạng nhãn da **nghiên cứu**. Không có GPU đám mây, checkpoint sinh ảnh hoặc trọng số y khoa trong ZIP. Không thay đổi driver, execution policy hay cài thư viện vào môi trường ComfyUI gốc.
 
 ## 1. Chuẩn bị

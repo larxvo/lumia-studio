@@ -489,7 +489,7 @@ function createPhotoLab(api, { analyzerFactory = () => createPhotoWorker("analyz
         if (busy || analyzing) return;
         const nextMode = currentMode === "beard" ? "beard" : "expression";
         await apply();
-        if (!mounted) api.openAI?.(nextMode);
+        if (!mounted) api.openGenerative?.(nextMode);
       };
       $("#lab-brush-size").oninput = (e) => brushSize = Number(e.target.value) / 100;
       for (const button of document.querySelectorAll("[data-lab-brush]")) button.onclick = () => {

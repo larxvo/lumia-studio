@@ -2,6 +2,10 @@
 
 ## 9.0.1 — GitHub distribution
 
+- Present the application through screenshots and Larx Vo attribution; remove hosted demo links and the obsolete source-import dependency.
+- Download the GPU companion source from checksum-verified GitHub Releases. Regenerate bundled downloads for distribution.
+- Use the full 7-Zip NSIS reader for Windows payload verification.
+
 - Establish the public `larxvo/lumia-studio` repository with complete editor source, bundled local model/runtime assets, tests and provenance notices.
 - Replace accumulated README history with a maintained product overview, Vietnamese introduction, setup, architecture, compatibility, Canva/GPU guides and contribution/security documents.
 - Add SHA-pinned CI and Windows release automation, artifact/source checks and a per-user installation/removal smoke check.

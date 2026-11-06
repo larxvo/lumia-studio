@@ -174,7 +174,7 @@ Vào **File → Đồng biên tập**. Chỉ dùng mã mời với người bạ
 **Máy chủ chuyển tiếp của bạn:** dùng lựa chọn Máy chủ của tôi, nhập `wss://your-server.example/luma-collab`, Tạo mã và gửi cho người cùng sửa. Người nhận dán mã và Nhận lời mời; **không cần mã trả lời**. Mã nguồn Node đi kèm có server này trong `npm start`. Mở Luma bằng HTTPS hoặc localhost để có WebCrypto. Đặt `LUMA_ALLOWED_ORIGINS` thành danh sách origin được phép, phân cách dấu phẩy, khi kết nối từ tên miền khác. Ví dụ:
 
 ```bash
-LUMA_ALLOWED_ORIGINS=https://luma-photo-studio.smartmyna.chatgpt.site npm start
+LUMA_ALLOWED_ORIGINS=https://editor.example.com npm start
 ```
 
 Phần server mặc định chỉ nghe 127.0.0.1:3000; cấu hình reverse proxy HTTPS/WSS khi tự triển khai Internet. AES-GCM mã hóa nội dung ở trình duyệt bằng khóa trong mã mời; khóa không được gửi tới relay. Máy chủ giữ room và kết nối tạm trong RAM, chuyển các envelope mã hóa, không lưu tài liệu. Bản Luma công khai là static host, **không kèm relay WSS đang vận hành**.

@@ -21,5 +21,9 @@ if (Test-Path $registry) { throw 'Removal registry key was not cleared.' }
 if (-not (Test-Path $sentinel)) { throw 'Removal deleted unrelated user data.' }
 $report = [ordered]@{schema='luma-windows-smoke-v1';status='passed';version='9.0.1';runner=$env:ImageOS;os=[Environment]::OSVersion.VersionString;installed=$true;uninstalled=$true;publisher='Larx Vo';unrelatedFilePreserved=$true;interactiveEditorTested=$false;gpuQualityVerified=$false;scope='Silent install/removal and metadata on a GitHub-hosted Windows VM; no interactive editing or GPU inference.'}
 $report | ConvertTo-Json -Depth 5 | Set-Content 'qa/windows-9.0.1-smoke.json'
+$releasePath = 'releases/windows/release.json'
+$release = Get-Content $releasePath -Raw | ConvertFrom-Json
+$release.nativeWindowsRuntimeTest = 'silent-install-removal-passed'
+$release | ConvertTo-Json -Depth 8 | Set-Content $releasePath -Encoding utf8
 # Cleanup is limited to this freshly created test directory and known sentinel.
 Remove-Item $sentinel; Remove-Item $installRoot -ErrorAction SilentlyContinue

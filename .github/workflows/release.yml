@@ -1,13 +1,13 @@
-name: Import source and publish first Windows release
+name: Windows release
 on:
   push:
     branches: [main]
-    paths: ['.github/workflows/import-and-release.yml']
+    paths: ['.github/workflows/release.yml']
   workflow_dispatch:
 permissions:
   contents: read
 concurrency:
-  group: luma-first-release
+  group: luma-windows-release
   cancel-in-progress: false
 jobs:
   source:
@@ -20,10 +20,6 @@ jobs:
       sha: ${{ steps.commit.outputs.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: main
-      - name: Restore checksum-pinned published source
-        run: python scripts/import-published-source.py
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: '24'
@@ -42,15 +38,15 @@ jobs:
         run: node --test --test-concurrency=1 tests/*.test.mjs
       - name: Python contracts and local-service checks
         run: python -m unittest tests/gpu_kit_test.py
-      - name: Commit complete source without rewriting history
+      - name: Commit regenerated distribution bundles
         id: commit
         shell: bash
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add .
+          git add -A -- dist/assets/luma-local-gpu-kit.zip 'dist/assets/luma-source.part*' dist/assets/source-manifest.json
           if ! git diff --cached --quiet; then
-            git commit -m 'feat: publish complete Luma Studio 9.0.1 source and documentation'
+            git commit -m 'build: refresh source and GPU companion downloads'
             git push origin HEAD:main
           fi
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -76,6 +72,17 @@ jobs:
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
       - run: npm run build
+      - name: Check PowerShell syntax and full NSIS archive support
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($file in @('gpu-kit/Install-Luma.ps1', 'scripts/windows-smoke.ps1')) {
+            $tokens = $null; $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file), [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) { throw ($errors | Out-String) }
+          }
+          $formats = & "$env:ProgramFiles/7-Zip/7z.exe" i
+          if ($LASTEXITCODE -ne 0 -or -not ($formats -match 'Nsis')) { throw 'The full 7-Zip NSIS reader is required.' }
       - name: Build Windows x64 installer
         run: npm run desktop:win
       - name: Validate archive, PE metadata and every payload file
@@ -84,7 +91,13 @@ jobs:
         shell: pwsh
         run: ./scripts/windows-smoke.ps1 -Installer ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe
       - name: Assemble complete source archive
-        run: python scripts/package-source.py
+        shell: pwsh
+        run: |
+          python scripts/package-source.py
+          if ($LASTEXITCODE -ne 0) { throw 'Source packaging failed.' }
+          $source = 'releases/luma-studio-9.0.1-source.zip'
+          $hash = (Get-FileHash -Algorithm SHA256 $source).Hash.ToLowerInvariant()
+          "$hash  luma-studio-9.0.1-source.zip" | Set-Content "$source.sha256" -Encoding ascii
       - name: Publish versioned installer, source and evidence
         shell: pwsh
         env:
@@ -98,7 +111,7 @@ jobs:
 
           Download the x64 Setup.exe, verify its SHA-256, then install for the current Windows user. The complete source ZIP includes the editor, local model/runtime assets and their notices. No separate Node/Python is needed for normal editing.
 
-          This release adds professional repository documentation, automated source/format tests and a Windows installer/payload/install-removal pipeline. It fixes silent-mode forwarding in the removal helper and the Windows verifier path.
+          This release adds professional repository documentation, automated source/format tests and a Windows installer/payload/install-removal pipeline. It fixes silent-mode forwarding in the removal helper and Windows archive verification. Public presentation uses application screenshots and Larx Vo branding; companion downloads now use checksum-verified GitHub Release assets.
 
           Read the attached payload and Windows smoke reports for actual validation. Installation/removal is exercised on a GitHub-hosted Windows VM; interactive editing on Windows, live Canva OAuth and physical-GPU generative quality remain separate and incomplete validations. The installer is unsigned. PSD/PSB support is RGB 8-bit with explicit subsets; native Canva editing occurs in Canva with PNG interchange into Luma.
 
@@ -112,7 +125,7 @@ jobs:
             gh release create $tag --repo $env:GITHUB_REPOSITORY --draft --target $env:SOURCE_SHA --title 'Luma Studio 9.0.1 — Windows x64 & source' --notes-file release-notes.md
             if ($LASTEXITCODE -ne 0) { throw 'Unable to create release draft.' }
           }
-          gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe.sha256 ./releases/windows/release.json ./releases/luma-studio-9.0.1-source.zip ./qa/platform9-windows-verification.json ./qa/windows-9.0.1-smoke.json
+          gh release upload $tag --repo $env:GITHUB_REPOSITORY --clobber ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe ./releases/windows/Luma-Studio-9.0.1-Setup-x64.exe.sha256 ./releases/windows/release.json ./releases/luma-studio-9.0.1-source.zip ./releases/luma-studio-9.0.1-source.zip.sha256 ./qa/platform9-windows-verification.json ./qa/windows-9.0.1-smoke.json
           if ($LASTEXITCODE -ne 0) { throw 'Unable to upload release assets.' }
           gh release edit $tag --repo $env:GITHUB_REPOSITORY --draft=false --latest
           if ($LASTEXITCODE -ne 0) { throw 'Unable to publish release.' }

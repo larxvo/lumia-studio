@@ -2388,7 +2388,7 @@ async function openPhotoSample(aged = false, openLab = true) {
   setDocument(d, "Open retouch sample");
   if (openLab) await photoLab.open(aged ? "restore" : "skin");
 }
-photoLab = createPhotoLab({ doc, layer, assets, commit, showModal, closeModal, toast, openSample: () => openPhotoSample(false), openRestoreSample: () => openPhotoSample(true), openAI: mode => advanced.generative.open(mode) });
+photoLab = createPhotoLab({ doc, layer, assets, commit, showModal, closeModal, toast, openSample: () => openPhotoSample(false), openRestoreSample: () => openPhotoSample(true), openGenerative: mode => advanced.generative.open(mode) });
 function commitDocument(id,label) {
   const s=sessions.find(s=>s.doc.id===id);if(!s)return;
   s.history.push(s.doc,label);advanced?.collaboration.localCommitted(s.doc,label);scheduleSave(s);

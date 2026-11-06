@@ -17,9 +17,9 @@ The installer is not code-signed. Publisher verification, native Windows executi
 
 Close Luma before updating or removing it. Windows Settings → Apps → Luma Studio provides removal. The removal manifest targets packaged application files; projects, unrelated files and the user's AppData are retained. PSD/PSB are added to Open With rather than forcibly becoming the default application.
 
-## Browser / self-hosting
+## Local development / self-hosting
 
-Use the [public browser demo](https://luma-photo-studio.tuhaotp.chatgpt.site/), or clone this repository and serve its `dist/` directory over HTTP. The public demo can lag the latest packaging release. The Electron OAuth bridge is not available in an ordinary browser tab; PPTX/SVG import is available there.
+Clone this repository and serve its `dist/` directory over HTTP for development or your own deployment. The public product introduction uses application screenshots. Use the Windows installer for the desktop experience. The Electron OAuth bridge is not available in an ordinary browser tab; PPTX/SVG import is available there.
 
 See [development setup](DEVELOPMENT.md) for commands. Opening `index.html` as `file://` is not supported because module workers and WebAssembly need an HTTP or the desktop application's registered origin.
 
