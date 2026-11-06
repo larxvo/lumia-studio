@@ -2,7 +2,7 @@
 
 Phần mềm chỉnh ảnh và thiết kế miễn phí, được tạo bởi **[Larx Vo · vovinhlac.com](https://vovinhlac.com)**.
 
-[Tải bản Windows](https://github.com/larxvo/lumia-studio/releases/latest) · [Dùng thử trên trình duyệt](https://luma-photo-studio.tuhaotp.chatgpt.site/) · [English](README.md)
+[Tải bản Windows](https://github.com/larxvo/lumia-studio/releases/latest) · [English](README.md)
 
 Luma hướng tới quy trình **chọn công việc → có kết quả tự động → chỉnh thêm bằng mask và thanh điều chỉnh → lưu dự án → xuất ảnh**. Bạn giữ ảnh gốc và có thể quay lại chỉnh các thiết lập được hỗ trợ. Không có thuê bao Luma hoặc watermark bắt buộc.
 

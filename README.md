@@ -6,9 +6,9 @@
 
 ### A free photo and design workspace, built around editable results.
 
-Created by **[Larx Vo](https://vovinhlac.com)** · Windows desktop · Browser editor · Local image processing
+Created by **[Larx Vo](https://vovinhlac.com)** · Windows desktop · Local image processing
 
-[Download Windows](https://github.com/larxvo/lumia-studio/releases/latest) · [Browser demo](https://luma-photo-studio.tuhaotp.chatgpt.site/) · [Tiếng Việt](README.vi.md) · [Documentation](docs/INSTALLATION.md)
+[Download Windows](https://github.com/larxvo/lumia-studio/releases/latest) · [Tiếng Việt](README.vi.md) · [Documentation](docs/INSTALLATION.md)
 
 ![CI](https://github.com/larxvo/lumia-studio/actions/workflows/ci.yml/badge.svg)
 ![License: MIT](https://img.shields.io/badge/application%20code-MIT-82cdb4)
