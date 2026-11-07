@@ -1,3 +1,5 @@
+import {fontFamily} from './font-family.js';
+import {paintPreviewPrefix} from './preview-cache.js';
 import {advancedText,paintText} from './text-engine.js';
 import {styleLayer,hasLayerEffects} from './layer-effects.js';
 import {patternTile} from './pattern-fill.js';
@@ -12,6 +14,7 @@ class Assets {
     this.map = /* @__PURE__ */ new Map();
     this.loading = /* @__PURE__ */ new Map();
     this.fonts = /* @__PURE__ */ new Map();
+    this.visualIds=new WeakMap();this.nextVisualId=0;this.fontRevision=0;
   }
   async load(source) {
     if (this.map.has(source)) return this.map.get(source);
@@ -19,7 +22,7 @@ class Assets {
     const promise = new Promise((resolve, reject) => {
       const img = new Image();
       img.onload = () => {
-        this.map.set(source, img);
+        this.set(source, img);
         this.loading.delete(source);
         resolve(img);
       };
@@ -36,7 +39,7 @@ class Assets {
     if (this.fonts.has(font.family)) return this.fonts.get(font.family);
     if (typeof FontFace === "undefined") return;
     const face = new FontFace(font.family, `url(${font.source})`), promise = face.load().then((loaded) => {
-      document.fonts.add(loaded);
+      document.fonts.add(loaded);this.fontRevision++;
       return loaded;
     }).catch((error) => {
       this.fonts.delete(font.family);
@@ -53,9 +56,9 @@ class Assets {
   get(source) {
     return this.map.get(source);
   }
-  set(source, value) {
-    this.map.set(source, value);
-  }
+  set(source,value){this.map.set(source,value);this.touch(source);}
+  touch(source){const image=this.map.get(source);if(image&&typeof image==='object'){const old=this.visualIds.get(image);this.visualIds.set(image,{id:old?.id||++this.nextVisualId,version:(old?.version||0)+1});}}
+  visualToken(source){const image=this.map.get(source);if(!image)return 'missing';if(!this.visualIds.has(image))this.touch(source);const v=this.visualIds.get(image);return [v.id,v.version,image.width,image.height].join(':');}
   prune(docs) {
     const used = new Set(docs.flatMap((d) => [...d.layers.flatMap((l) => [l.source, l.mask?.source]),...(d.alphaChannels||[]).map(c=>c.mask.source), d.selection?.source]).filter(Boolean));
     for (const k of this.map.keys()) if (k.startsWith("data:") && !used.has(k)) this.map.delete(k);
@@ -146,7 +149,7 @@ function drawContent(ctx, layer, assets) {
   ctx.lineWidth = e.strokeWidth || 2;
   if(layer.type==="text"&&advancedText(layer)){paintText(ctx,layer);}
   else if (layer.type === "text") {
-    const family = /^[a-z0-9 _-]{1,80}$/i.test(layer.font || "") ? layer.font : "Arial";
+    const family = fontFamily(layer.font);
     ctx.font = `${layer.italic ? "italic " : ""}${layer.fontWeight || 600} ${layer.fontSize || 48}px "${family}"`;
     ctx.textBaseline = "top";
     ctx.textAlign = "left";
@@ -322,13 +325,15 @@ function paintStack(c, doc, layers, assets, scale, solo = null) {
   }
   if (base) base.width = base.height = 1;
 }
-function renderDocument(doc, assets, { scale = 1, solo = null, background = null } = {}) {
+function renderDocument(doc, assets, { scale = 1, solo = null, background = null, preview = null } = {}) {
   const c = canvas(doc.width * scale, doc.height * scale), ctx = c.getContext("2d");
   if (background) {
     ctx.fillStyle = background;
     ctx.fillRect(0, 0, c.width, c.height);
   }
-  paintStack(c, doc, solo ? doc.layers.filter((l) => l.id === solo) : children(doc), assets, scale, solo);
+  const stack=solo?doc.layers.filter(l=>l.id===solo):children(doc);
+  if(preview&&!solo&&!background)paintPreviewPrefix(c,doc,stack,assets,{scale,...preview},(target,list)=>paintStack(target,doc,list,assets,scale));
+  else paintStack(c,doc,stack,assets,scale,solo);
   return c;
 }
 function thumbnail(doc, layer, assets, width = 48, height = 36) {

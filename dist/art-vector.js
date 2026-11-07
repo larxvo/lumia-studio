@@ -53,6 +53,11 @@ function traceArt(data,w,h,p,palette,lut) {
     while(head<tail){const i=queue[head++],x=i%tw,y=Math.floor(i/tw);for(const j of[x?i-1:-1,x<tw-1?i+1:-1,y?i-tw:-1,y<th-1?i+tw:-1]){if(j<0||labels[j]<0)continue;if(labels[j]===color){if(!visited[j]){visited[j]=1;queue[tail++]=j;}}else border[labels[j]]++;}}
     if(tail<=p.speckle&&border.some(v=>v>0)){let best=0;for(let i=1;i<border.length;i++)if(border[i]>border[best])best=i;for(let i=0;i<tail;i++)labels[queue[i]]=best;}
   }
+  const marks=traceLabels(labels,tw,th,palette,{tolerance:p.smooth/100*1.2});
+  for(const mark of marks)mark.polygons=mark.polygons.map(poly=>poly.map(([x,y])=>[x*w/tw,y*h/th]));
+  return {width:w,height:h,marks,palette:palette.map(hex),background:p.background==='paper'?p.paper:null,mode:p.mode};
+}
+export function traceLabels(labels,tw,th,palette,{tolerance=.7}={}) {
   const marks=[];let totalVertices=0;
   for(let color=0;color<palette.length;color++) {
     const edges=new Map(),stride=tw+1;let count=0;
@@ -68,12 +73,13 @@ function traceArt(data,w,h,p,palette,lut) {
       do {points.push([current%stride,Math.floor(current/stride)]);const list=edges.get(current);if(!list?.length)break;
         const order=[(dir+1)%4,dir,(dir+3)%4,(dir+2)%4];let index=order.map(d=>list.findIndex(e=>e.dir===d)).find(i=>i>=0),edge=list.splice(index??0,1)[0];current=edge.b;dir=edge.dir;
       } while(current!==start&&++guard<=count);
-      if(current===start&&points.length>=4&&Math.abs(signedArea(points))>=.5){const q=simplifyClosed(points,p.smooth/100*1.2);if(q.length>=3)polygons.push(q.map(([x,y])=>[x*w/tw,y*h/th]));}
+      if(current===start&&points.length>=4&&Math.abs(signedArea(points))>=.5){const q=simplifyClosed(points,tolerance);if(q.length>=3)polygons.push(q);}
     }
     if(polygons.length)marks.push({shape:'path',fill:hex(palette[color]),alpha:1,polygons});
   }
-  return {width:w,height:h,marks,palette:palette.map(hex),background:p.background==='paper'?p.paper:null,mode:p.mode};
+  return marks;
 }
+
 function glyph(ctx,m) {
   const s=m.size,h=s/2;ctx.beginPath();
   if(m.shape==='dots')ctx.ellipse(0,0,h,h,0,0,Math.PI*2);

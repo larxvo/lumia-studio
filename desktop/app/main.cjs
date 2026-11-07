@@ -2,6 +2,9 @@
 const {app,BrowserWindow,Menu,dialog,ipcMain,shell,protocol,net,safeStorage,session}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),http=require('node:http');
 const {pathToFileURL}=require('node:url');
+const {enumerateSystemFonts}=require('./system-fonts.cjs');
+const {resolveLanguage}=require('./locale.cjs');
+const {nativeMenu}=require('./native-menu.cjs');
 const {CanvaClient,canvaURL}=require('./canva.cjs');
 protocol.registerSchemesAsPrivileged([{scheme:'luma',privileges:{standard:true,secure:true,supportFetchAPI:true,stream:true,corsEnabled:true}}]);
 app.setName('Luma Studio');app.setAppUserModelId('com.vovinhlac.lumastudio');
@@ -28,7 +31,15 @@ else{
   win.webContents.on('will-navigate',(e,url)=>{if(!url.startsWith('luma://app/')){e.preventDefault();void openExternal(url);}});
   win.webContents.on('will-attach-webview',event=>event.preventDefault());
   session.defaultSession.on('will-download',(_event,item)=>{item.setSaveDialogOptions({title:'Lưu từ Luma Studio',defaultPath:path.join(app.getPath('downloads'),path.basename(item.getFilename()))});});
-  Menu.setApplicationMenu(Menu.buildFromTemplate([{label:'Luma Studio',submenu:[{label:'Về Luma Studio',click:()=>dialog.showMessageBox(win,{title:'Luma Studio 9.1.0',message:'Luma Studio · Miễn phí',detail:'Được tạo bởi Larx Vo · vovinhlac.com\nPSD/PSB RGB 8-bit; tương thích theo từng tính năng. Canva cần kết nối tài khoản. AI GPU cần máy xử lý riêng.'})},{label:'vovinhlac.com',click:()=>shell.openExternal('https://vovinhlac.com')},{type:'separator'},{role:'quit',label:'Thoát'}]},{label:'Chỉnh sửa',submenu:[{label:'Hoàn tác',click:()=>win.webContents.send('luma:action','undo')},{label:'Làm lại',click:()=>win.webContents.send('luma:action','redo')},{type:'separator'},{role:'cut'},{role:'copy'},{role:'paste'},{role:'selectAll'},{type:'separator'},{label:'Giao diện & con trỏ',click:()=>win.webContents.send('luma:action','cursor-preferences')}]},{label:'Hiển thị',submenu:[{role:'resetZoom'},{role:'zoomIn'},{role:'zoomOut'},{role:'togglefullscreen'}]}]));
+  const languagePath=path.join(app.getPath('userData'),'appearance.json');
+  let languagePreference='auto';try{const p=JSON.parse(await fs.readFile(languagePath,'utf8'));if(['auto','vi','en'].includes(p.language))languagePreference=p.language;}catch{}
+  const languages=app.getPreferredSystemLanguages();
+  const updateMenu=()=>Menu.setApplicationMenu(Menu.buildFromTemplate(nativeMenu({language:resolveLanguage(languages,languagePreference),window:win,dialog,shell})));
+  updateMenu();
+  ipcMain.handle('luma:fonts',async(event,refresh)=>{check(event);return enumerateSystemFonts({refresh:refresh===true});});
+  ipcMain.handle('luma:environment',event=>{check(event);return {languages,languagePreference};});
+  ipcMain.handle('luma:language',async(event,choice)=>{check(event);if(!['auto','vi','en'].includes(choice))throw Error('Invalid language.');languagePreference=choice;updateMenu();try{let settings={};try{settings=JSON.parse(await fs.readFile(languagePath,'utf8'));}catch{}await fs.writeFile(languagePath,JSON.stringify({...settings,language:choice}),{mode:0o600});return {saved:true};}catch{return {saved:false};}});
+
   ipcMain.on('luma:ready',event=>{if(trusted(event)){rendererReady=true;void deliver();}});
   ipcMain.handle('luma:gpu-info',async event=>{check(event);return{schema:'luma-desktop-gpu-v1',graphics:await app.getGPUInfo('basic'),features:app.getGPUFeatureStatus(),computeVerified:false,qualityVerified:false};});
   ipcMain.handle('luma:canva',async(event,operation,payload={})=>{check(event);switch(operation){

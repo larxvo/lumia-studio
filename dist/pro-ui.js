@@ -1,3 +1,4 @@
+import {retouchPatch} from './retouch-brush.js';
 import {assertCanEdit,canEdit} from './layer-policy.js';
 import { createLayer, clone, uid, clamp, MAX_PIXELS } from "./model.js";
 import { ancestors, children, subtree, selected, roots, bounds, refreshGroups, groupSelection, ungroup, duplicateObjects, deleteObjects, reorderObject, alignObjects, distribute, affineGeometry, effectiveLocked, snapDelta } from "./pro-model.js";
@@ -10,7 +11,7 @@ const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelect
 const nice = (s) => s.replace(/(^|[- ])\w/g, (m) => m.toUpperCase()).replaceAll("-", " ");
 const actionButton = (id, label, ic = "plus") => `<button class="studio-action" data-action="${id}">${icon(ic)}<span>${label}</span>${icon("chevron-right")}</button>`;
 function createProStudio(api) {
-  let snap = true, snapLines = [], view = "composite", compare = false, styleClipboard = null, retouch = { size: 60, strength: 40, hardness: 40 }, sample = null, cloneOffset = null, stroke = null, pen = [], penDrag = null, penHover = null;
+  let snap = true, snapLines = [], view = "composite", compare = false, styleClipboard = null, retouch = { size: 60, strength: 40, hardness: 40,aligned:true,range:"all" }, sample = null,sampleDocId=null, cloneOffset = null, stroke = null, pen = [], penDrag = null, penHover = null;
   const d = api.doc, l = api.layer;
   const change = (name, run) => () => {
     run();
@@ -307,6 +308,7 @@ function createProStudio(api) {
     api.setTool("move");
   }
   function retouchDown(e, p, tool) {
+    if(sampleDocId!==d().id){sample=null;cloneOffset=null;sampleDocId=d().id;}
     if (e.altKey && ["clone", "heal"].includes(tool)) {
       sample = { ...p };
       cloneOffset = null;
@@ -333,8 +335,10 @@ function createProStudio(api) {
     const working = "retouch-" + target.id;
     api.assets.set(working, out);
     target.source = working;
+    if(!retouch.aligned)cloneOffset=null;
     if (sample && !cloneOffset) cloneOffset = { x: sample.x - p.x, y: sample.y - p.y };
-    stroke = { docId: d().id, target, before, out, sourceData, width: ref.width, height: ref.height, last: p, tool, working, selection: d().selection ? maskCanvas(d(), d().selection, 1, api.assets).getContext("2d").getImageData(0, 0, d().width, d().height).data : null };
+    stroke = {pointerId:e.pointerId, docId: d().id, target, before, out, sourceData, width: ref.width, height: ref.height, last: p, tool, working, selection: d().selection ? maskCanvas(d(), d().selection, 1, api.assets).getContext("2d").getImageData(0, 0, d().width, d().height).data : null };
+    ref.width=ref.height=1;
     stamp(p, e);
     api.renderUI();
     return true;
@@ -344,32 +348,19 @@ function createProStudio(api) {
     if (!g) return;
     const radius = retouch.size / 2, ox = Math.max(0, Math.floor(p.x - radius)), oy = Math.max(0, Math.floor(p.y - radius)), w = Math.min(g.width - ox, Math.ceil(radius * 2 + 2)), h = Math.min(g.height - oy, Math.ceil(radius * 2 + 2));
     if (w < 1 || h < 1) return;
-    const x = g.out.getContext("2d"), patch = x.getImageData(ox, oy, w, h), hard = retouch.hardness / 100, pressure = e.pointerType === "pen" ? Math.max(0.1, e.pressure || 0.5) : 1, strength = retouch.strength / 100 * pressure, offset = cloneOffset || { x: 0, y: 0 }, srcAt = (xx, yy) => (clamp(Math.round(yy), 0, g.height - 1) * g.width + clamp(Math.round(xx), 0, g.width - 1)) * 4, centerS = srcAt(p.x + offset.x, p.y + offset.y), centerD = srcAt(p.x, p.y), delta = [0, 1, 2].map((k) => g.sourceData[centerD + k] - g.sourceData[centerS + k]);
-    for (let yy = 0; yy < h; yy++) for (let xx = 0; xx < w; xx++) {
-      const gx = ox + xx, gy = oy + yy, dist = Math.hypot(gx + 0.5 - p.x, gy + 0.5 - p.y) / radius;
-      if (dist >= 1) continue;
-      const fall = dist < hard ? 1 : (1 - dist) / Math.max(0.01, 1 - hard), global = (gy * g.width + gx) * 4, i = (yy * w + xx) * 4, source = ["clone", "heal"].includes(g.tool) ? srcAt(gx + offset.x, gy + offset.y) : global;
-      let a = fall * fall * strength * (g.selection ? g.selection[global + 3] / 255 : 1) * g.sourceData[source + 3] / 255;
-      if (!a) continue;
-      const oldA = patch.data[i + 3] / 255, outA = a + oldA * (1 - a);
-      for (let k = 0; k < 3; k++) {
-        let value = g.sourceData[source + k];
-        if (g.tool === "heal") value = clamp(value + delta[k]);
-        if (g.tool === "dodge") value = clamp(value * 1.28 + 3);
-        if (g.tool === "burn") value = value * 0.72;
-        patch.data[i + k] = (value * a + patch.data[i + k] * oldA * (1 - a)) / (outA || 1);
-      }
-      patch.data[i + 3] = outA * 255;
-    }
+    const x=g.out.getContext('2d'),patch=x.getImageData(ox,oy,w,h),pressure=e.pointerType==='pen'?Math.max(.1,e.pressure||.5):1;
+    retouchPatch({patch,source:g.sourceData,width:g.width,height:g.height,left:ox,top:oy,point:p,radius,hardness:retouch.hardness/100,strength:retouch.strength/100*pressure,tool:g.tool,offset:cloneOffset||{x:0,y:0},selection:g.selection,range:retouch.range});
+    api.assets.touch(g.working);
     x.putImageData(patch, ox, oy);
     api.requestRender();
   }
   function context(tool) {
-    if (["clone", "heal", "dodge", "burn"].includes(tool)) return `<span class="context-extra">${["clone", "heal"].includes(tool) ? "Alt-click source \xB7 Paint on a separate retouch layer" : "Paint on a separate retouch layer"}</span><label>Size <input type="number" data-retouch="size" min="4" max="400" value="${retouch.size}"> px</label><label>Strength <input type="number" data-retouch="strength" min="1" max="100" value="${retouch.strength}"> %</label><label>Hardness <input type="number" data-retouch="hardness" min="0" max="100" value="${retouch.hardness}"> %</label>`;
+    if (["clone", "heal", "dodge", "burn"].includes(tool)) return `<span class="context-extra">${["clone", "heal"].includes(tool) ? "Alt-click source \xB7 Paint on a separate retouch layer" : "Paint on a separate retouch layer"}</span><label>Size <input type="number" data-retouch="size" min="4" max="400" value="${retouch.size}"> px</label><label>Strength <input type="number" data-retouch="strength" min="1" max="100" value="${retouch.strength}"> %</label><label>Hardness <input type="number" data-retouch="hardness" min="0" max="100" value="${retouch.hardness}"> %</label>${['clone','heal'].includes(tool)?`<label><input id="retouch-aligned" type="checkbox" ${retouch.aligned?'checked':''}> Aligned</label>`:`<select id="retouch-range" aria-label="Tonal range">${['all','shadows','midtones','highlights'].map(v=>`<option value="${v}" ${retouch.range===v?'selected':''}>${nice(v)}</option>`).join('')}</select>`}`;
     if (tool === "pen") return '<span class="context-extra">Click for corners \xB7 Drag for curve handles \xB7 Enter to finish</span><button class="button" data-action="finish-path">Finish path</button><button class="button" data-action="cancel-path">Cancel path</button>';
     return null;
   }
   function bindContext() {
+    const aligned=$('#retouch-aligned'),range=$('#retouch-range');if(aligned)aligned.onchange=()=>{retouch.aligned=aligned.checked;cloneOffset=null;};if(range)range.onchange=()=>retouch.range=range.value;
     $$("[data-retouch]").forEach((input) => input.onchange = () => {
       retouch[input.dataset.retouch] = clamp(Number(input.value) || 0, Number(input.getAttribute("min")), Number(input.getAttribute("max")));
       input.value = retouch[input.dataset.retouch];
@@ -398,7 +389,8 @@ function createProStudio(api) {
   }
   function pointerMove(e, p) {
     if (stroke) {
-      const step = Math.max(2, retouch.size / 5), distance = Math.hypot(p.x - stroke.last.x, p.y - stroke.last.y), n = Math.max(1, Math.ceil(distance / step)), a = stroke.last;
+      if(e.pointerId!==undefined&&stroke.pointerId!==e.pointerId)return true;
+      const step = Math.max(1, retouch.size / 8), distance = Math.hypot(p.x - stroke.last.x, p.y - stroke.last.y), n = Math.max(1, Math.ceil(distance / step)), a = stroke.last;
       for (let i = 1; i <= n; i++) stamp({ x: a.x + (p.x - a.x) * i / n, y: a.y + (p.y - a.y) * i / n }, e);
       stroke.last = p;
       return true;
@@ -414,7 +406,9 @@ function createProStudio(api) {
     }
     return false;
   }
-  function pointerUp() {
+  function pointerUp(e,p) {
+    if(stroke&&e?.pointerId!==undefined&&stroke.pointerId!==e.pointerId)return true;
+    if(stroke&&p&&Math.hypot(p.x-stroke.last.x,p.y-stroke.last.y)>.01)pointerMove(e,p);
     if (stroke) {
       const g = stroke, source = g.out.toDataURL();
       api.assets.set(source, g.out);
@@ -592,7 +586,7 @@ function createProStudio(api) {
   };
   for (const mode of ["left", "right", "center-x", "top", "bottom", "center-y"]) actions["align-" + mode] = change("Align selection", () => alignObjects(d(), mode));
   const actionItems = [["studio", "Studio tools", "sliders", ""], ["group", "Group selected layers", "folder", "Ctrl G"], ["ungroup", "Ungroup layers", "folder-open", "Ctrl Shift G"], ["clip", "Create / release clipping mask", "clip", "Ctrl Alt G"], ["merge-selected", "Merge selected layers", "layers", "Ctrl E"], ["rasterize", "Rasterize active layer", "image", ""], ["transform", "Transform selection", "move", "Ctrl T"], ["filters", "Live filter stack", "sliders", ""], ["refine-selection", "Refine selection", "select", ""], ["guides", "Guides & snapping", "ruler", ""], ["snap", "Toggle snapping", "magnet", ""], ["distribute-x", "Distribute horizontally", "align-center", ""], ["distribute-y", "Distribute vertically", "align-center", ""], ["copy-style", "Copy layer style", "copy", ""], ["paste-style", "Paste layer style", "copy", ""], ["import-font", "Import a font", "text", ""], ["export-svg", "Export SVG", "shape", ""], ["export-pack", "Export a size pack", "download", ""], ["view-channels", "Channel preview", "adjust", ""], ["compare", "Bypass adjustments / filters in preview", "eye", ""]];
-  return { actions, actionItems, openFilters:filtersModal,setView:next=>{if(["composite","red","green","blue","alpha"].includes(next)){view=next;api.requestRender();}}, renderPanel, extras, context, bindContext, pointerDown, pointerMove, pointerUp, cancel, key, drawOverlay, snapMove, remapMasks: transformMasks, clearSnap: () => snapLines = [], view: () => view, previewDocument: (source) => compare ? { ...source, layers: source.layers.map((x) => ({ ...x, filters: [], visible: x.type === "adjustment" ? false : x.visible })) } : source, duplicate: () => {
+  return {isDrawing:()=>!!stroke||!!penDrag,mutableIds:()=>stroke?[stroke.target.id]:[],brushSize:()=>retouch.size,cursorInfo:p=>({close:api.tool()==='pen'&&pen.length>2&&p&&Math.hypot(p.x-pen[0].x,p.y-pen[0].y)*api.zoom()<10}), actions, actionItems, openFilters:filtersModal,setView:next=>{if(["composite","red","green","blue","alpha"].includes(next)){view=next;api.requestRender();}}, renderPanel, extras, context, bindContext, pointerDown, pointerMove, pointerUp, cancel, key, drawOverlay, snapMove, remapMasks: transformMasks, clearSnap: () => snapLines = [], view: () => view, previewDocument: (source) => compare ? { ...source, layers: source.layers.map((x) => ({ ...x, filters: [], visible: x.type === "adjustment" ? false : x.visible })) } : source, duplicate: () => {
     duplicateObjects(d());
     api.commit("Duplicate selected layers");
   }, remove: () => {
