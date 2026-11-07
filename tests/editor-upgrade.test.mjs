@@ -62,3 +62,13 @@ test('transparent trace adds actual editable path layers with preserved holes an
 test('canceling trace does not alter source or layer count',async()=>{
  const before=studio.getDocument();await studio.runAction('trace-svg');click('[data-modal-close]');assert.deepEqual(studio.getDocument(),before);
 });
+
+test('Pen Undo and Redo edit draft anchors without undoing prior document operations',async()=>{
+ sample();studio.setTool('pen');for(const [x,y]of [[10,10],[60,10],[50,60]]){pointer('pointerdown',x,y);pointer('pointerup',x,y);}
+ const before=studio.getHistory().index;await studio.runAction('undo');assert.equal(studio.getHistory().index,before);await studio.runAction('redo');assert.equal(studio.getHistory().index,before);await studio.runAction('undo');await studio.runAction('finish-path');
+ const l=studio.getDocument().layers.at(-1);assert.equal(l.shape,'path');assert.equal(l.path.filter(c=>c[0]==='C').length,1);assert.equal(l.fillEnabled,false);await studio.runAction('undo');assert.equal(studio.getDocument().layers.length,1);
+});
+test('changing trace analysis settings immediately invalidates old output',async()=>{
+ const d=createDocument(32,32),c=document.createElement('canvas');c.width=c.height=32;c.getContext('2d').fillRect(3,3,25,25);const source=c.toDataURL();studio.assets.set(source,c);const l=createLayer('image',{source,width:32,height:32});d.layers=[l];d.activeId=l.id;studio.setDocument(d);
+ await studio.runAction('trace-svg');for(let i=0;i<30&&document.querySelector('#trace-stat')?.dataset.ready!=='true';i++)await tick();assert.equal(document.querySelector('#trace-stat').dataset.ready,'true');value('#trace-threshold',200,'input');assert.equal(document.querySelector('#trace-stat').dataset.ready,'false');click('[data-modal-button="2"]');assert.equal(studio.getDocument().layers.length,1);click('[data-modal-close]');await new Promise(r=>setTimeout(r,150));assert.equal(studio.getDocument().layers.length,1);
+});

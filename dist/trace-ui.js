@@ -31,7 +31,7 @@ export function createTraceStudio(api,{workerFactory=()=>typeof Worker==='undefi
     if(doc.layers.length+result.paths.length+1>150)throw Error('Too many paths for native layers. Increase simplification or download SVG.');
     const group=createLayer('group',{name:'Traced paths',x:0,y:0,width:doc.width,height:doc.height}),settings=style(),outline=settings.style==='outline'||settings.animate;
     const shapes=result.paths.map((part,i)=>{
-     const points=part.commands.filter(c=>c.type!=='Z'),left=Math.min(...points.map(c=>c.x)),top=Math.min(...points.map(c=>c.y)),width=Math.max(1,Math.max(...points.map(c=>c.x))-left),height=Math.max(1,Math.max(...points.map(c=>c.y))-top);
+     const box=part.commands.reduce((b,c)=>c.type==='Z'?b:{left:Math.min(b.left,c.x),top:Math.min(b.top,c.y),right:Math.max(b.right,c.x),bottom:Math.max(b.bottom,c.y)},{left:Infinity,top:Infinity,right:-Infinity,bottom:-Infinity}),left=box.left,top=box.top,width=Math.max(1,box.right-left),height=Math.max(1,box.bottom-top);
      const path=part.commands.map(c=>c.type==='Z'?['Z']:[c.type,c.x-left,c.y-top]),l=createLayer('shape',{name:settings.prefix+' · '+String(i+1).padStart(3,'0'),parentId:group.id,shape:'path',path,pathWidth:width,pathHeight:height,x:left,y:top,width,height,color:part.fill,fillEnabled:!outline});
      if(outline)Object.assign(l.effects,{stroke:true,strokeColor:part.fill,strokeWidth:settings.strokeWidth});return l;
     });
@@ -48,8 +48,9 @@ export function createTraceStudio(api,{workerFactory=()=>typeof Worker==='undefi
 <p class="dock-caption">Alpha tracing preserves transparent holes. Use color regions for opaque artwork. Simplification trades detail for fewer anchors.</p></div></div>`,
   [{label:'Cancel',run:()=>api.closeModal(true)},{label:'Download SVG',run:()=>{try{downloadBlob(new Blob([svg()],{type:'image/svg+xml'}),$('#trace-prefix').value.trim()+'.svg');}catch(e){api.toast(e.message,true);}}},{label:'Add editable paths',primary:true,run:add}],
   ()=>{
+   $('#trace-hide-source').checked=true;
    const image=api.assets.get(snapshot.source);if(image){const sample=canvas(64,64),x=sample.getContext('2d');x.drawImage(image,0,0,64,64);const p=x.getImageData(0,0,64,64).data,bins=new Map();for(let i=0;i<p.length;i+=4)if(p[i+3]>200){const key=[p[i]>>4,p[i+1]>>4,p[i+2]>>4].join(','),bin=bins.get(key)||{sum:[0,0,0],n:0};for(let k=0;k<3;k++)bin.sum[k]+=p[i+k];bin.n++;bins.set(key,bin);}const best=[...bins.values()].sort((a,b)=>b.n-a.n)[0];if(best)$('#trace-fill').value='#'+best.sum.map(v=>Math.round(v/best.n).toString(16).padStart(2,'0')).join('');sample.width=sample.height=1;}
-   for(const id of ['mode','fill','colors','detail','threshold','tolerance','speckle'])$('#trace-'+id).oninput=()=>{clearTimeout(timer);timer=setTimeout(run,130);};
+   for(const id of ['mode','fill','colors','detail','threshold','tolerance','speckle'])$('#trace-'+id).oninput=()=>{clearTimeout(timer);revision++;worker?.terminate();worker=null;result=null;$('#trace-copy').disabled=true;$('#trace-stat').dataset.ready='false';$('#trace-vector').innerHTML='';$('#trace-status').textContent='Tracing contours…';timer=setTimeout(run,130);};
    for(const id of ['prefix','style','stroke','animate'])$('#trace-'+id).oninput=preview;
    $('#trace-compare').onchange=()=>{$('#trace-original').style.opacity=$('#trace-compare').checked?'.45':'0';};
    $('#trace-original').style.opacity='0';$('#trace-copy').onclick=async()=>{try{await navigator.clipboard.writeText(svg());api.toast('SVG copied.');}catch(e){api.toast(e.message,true);}};void run();

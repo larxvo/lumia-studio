@@ -11,7 +11,7 @@ const $ = (s) => document.querySelector(s), $$ = (s) => [...document.querySelect
 const nice = (s) => s.replace(/(^|[- ])\w/g, (m) => m.toUpperCase()).replaceAll("-", " ");
 const actionButton = (id, label, ic = "plus") => `<button class="studio-action" data-action="${id}">${icon(ic)}<span>${label}</span>${icon("chevron-right")}</button>`;
 function createProStudio(api) {
-  let snap = true, snapLines = [], view = "composite", compare = false, styleClipboard = null, retouch = { size: 60, strength: 40, hardness: 40,aligned:true,range:"all" }, sample = null,sampleDocId=null, cloneOffset = null, stroke = null, pen = [], penDrag = null, penHover = null;
+  let snap = true, snapLines = [], view = "composite", compare = false, styleClipboard = null, retouch = { size: 60, strength: 40, hardness: 40,aligned:true,range:"all" }, sample = null,sampleDocId=null, cloneOffset = null, stroke = null, pen = [],penUndone=[], penDrag = null, penHover = null;
   const d = api.doc, l = api.layer;
   const change = (name, run) => () => {
     run();
@@ -303,7 +303,7 @@ function createProStudio(api) {
     const pathLayer = createLayer("shape", { name: "Bezier path", shape: "path", path, pathWidth: w, pathHeight: h, x, y, width: w, height: h, color: api.foreground(), fillEnabled: pen.length > 2 });
     if (pen.length === 2) Object.assign(pathLayer.effects, { stroke: true, strokeColor: api.foreground(), strokeWidth: 3 });
     api.addLayer(pathLayer);
-    pen = [];
+    pen = [];penUndone=[];
     penDrag = null;
     api.setTool("move");
   }
@@ -379,7 +379,7 @@ function createProStudio(api) {
         return true;
       }
       const anchor = { x: p.x, y: p.y, dx: 0, dy: 0 };
-      pen.push(anchor);
+      penUndone=[];pen.push(anchor);
       penDrag = anchor;
       penHover = p;
       api.overlay();
@@ -439,15 +439,22 @@ function createProStudio(api) {
       api.requestRender();
       return true;
     }
-    if (pen.length) {
-      pen = [];
+    if (pen.length||penUndone.length) {
+      pen = [];penUndone=[];
       penDrag = null;
       api.overlay();
       return true;
     }
     return false;
   }
+  function undoDraft(redo=false){
+    if(api.tool()!=='pen'||!pen.length&&!penUndone.length)return false;
+    if(redo){if(penUndone.length)pen.push(penUndone.pop());}else if(pen.length)penUndone.push(pen.pop());
+    penDrag=null;api.overlay();return true;
+  }
   function key(e) {
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&undoDraft(e.shiftKey)){e.preventDefault();return true;}
+    if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'&&undoDraft(true)){e.preventDefault();return true;}
     if (e.key === "Escape" && cancel()) {
       e.preventDefault();
       return true;
@@ -586,7 +593,7 @@ function createProStudio(api) {
   };
   for (const mode of ["left", "right", "center-x", "top", "bottom", "center-y"]) actions["align-" + mode] = change("Align selection", () => alignObjects(d(), mode));
   const actionItems = [["studio", "Studio tools", "sliders", ""], ["group", "Group selected layers", "folder", "Ctrl G"], ["ungroup", "Ungroup layers", "folder-open", "Ctrl Shift G"], ["clip", "Create / release clipping mask", "clip", "Ctrl Alt G"], ["merge-selected", "Merge selected layers", "layers", "Ctrl E"], ["rasterize", "Rasterize active layer", "image", ""], ["transform", "Transform selection", "move", "Ctrl T"], ["filters", "Live filter stack", "sliders", ""], ["refine-selection", "Refine selection", "select", ""], ["guides", "Guides & snapping", "ruler", ""], ["snap", "Toggle snapping", "magnet", ""], ["distribute-x", "Distribute horizontally", "align-center", ""], ["distribute-y", "Distribute vertically", "align-center", ""], ["copy-style", "Copy layer style", "copy", ""], ["paste-style", "Paste layer style", "copy", ""], ["import-font", "Import a font", "text", ""], ["export-svg", "Export SVG", "shape", ""], ["export-pack", "Export a size pack", "download", ""], ["view-channels", "Channel preview", "adjust", ""], ["compare", "Bypass adjustments / filters in preview", "eye", ""]];
-  return {isDrawing:()=>!!stroke||!!penDrag,mutableIds:()=>stroke?[stroke.target.id]:[],brushSize:()=>retouch.size,cursorInfo:p=>({close:api.tool()==='pen'&&pen.length>2&&p&&Math.hypot(p.x-pen[0].x,p.y-pen[0].y)*api.zoom()<10}), actions, actionItems, openFilters:filtersModal,setView:next=>{if(["composite","red","green","blue","alpha"].includes(next)){view=next;api.requestRender();}}, renderPanel, extras, context, bindContext, pointerDown, pointerMove, pointerUp, cancel, key, drawOverlay, snapMove, remapMasks: transformMasks, clearSnap: () => snapLines = [], view: () => view, previewDocument: (source) => compare ? { ...source, layers: source.layers.map((x) => ({ ...x, filters: [], visible: x.type === "adjustment" ? false : x.visible })) } : source, duplicate: () => {
+  return {undoDraft,isDrawing:()=>!!stroke||!!penDrag,mutableIds:()=>stroke?[stroke.target.id]:[],brushSize:()=>retouch.size,cursorInfo:p=>({close:api.tool()==='pen'&&pen.length>2&&p&&Math.hypot(p.x-pen[0].x,p.y-pen[0].y)*api.zoom()<10}), actions, actionItems, openFilters:filtersModal,setView:next=>{if(["composite","red","green","blue","alpha"].includes(next)){view=next;api.requestRender();}}, renderPanel, extras, context, bindContext, pointerDown, pointerMove, pointerUp, cancel, key, drawOverlay, snapMove, remapMasks: transformMasks, clearSnap: () => snapLines = [], view: () => view, previewDocument: (source) => compare ? { ...source, layers: source.layers.map((x) => ({ ...x, filters: [], visible: x.type === "adjustment" ? false : x.visible })) } : source, duplicate: () => {
     duplicateObjects(d());
     api.commit("Duplicate selected layers");
   }, remove: () => {

@@ -293,7 +293,7 @@ function renderProperties() {
     return;
   }
   if (l?.type === "group") {
-    root.innerHTML = `<div class="property-title">${icon("folder")}${esc(l.name)}<span class="badge">GROUP</span></div><p class="panel-description">${subtree(doc(), l.id).length - 1} layers · opacity and masks affect the whole group.</p><div class="studio-button-grid"><button class="button" data-action="transform">Transform group</button><button class="button" data-action="ungroup">Ungroup</button><button class="button" data-action="rasterize">Rasterize</button><button class="button" data-action="studio">Align / distribute</button></div>${pro?.extras(l) || ""}${l.mask ? `<div class="mask-panel"><h4>Group mask</h4>${rangeControl("Feather", "mask.feather", l.mask.feather || 0, 0, 100, 1, "px")}${rangeControl("Density", "mask.density", l.mask.density??100, 0, 100, 1, "%")}<label class="check-row"><input type="checkbox" data-property="mask.disabled" ${l.mask.disabled?"checked":""}> Tạm tắt mask</label><div class="mask-actions"><button data-action="mask-mode">Paint mask</button><button data-action="invert-mask">Invert</button><button data-action="remove-mask">Remove</button></div></div>` : ""}`;
+    root.innerHTML = `<div class="property-title">${icon("folder")}<span data-i18n-ignore>${esc(l.name)}</span><span class="badge">GROUP</span></div><p class="panel-description">${subtree(doc(), l.id).length - 1} layers · opacity and masks affect the whole group.</p><div class="studio-button-grid"><button class="button" data-action="transform">Transform group</button><button class="button" data-action="ungroup">Ungroup</button><button class="button" data-action="rasterize">Rasterize</button><button class="button" data-action="studio">Align / distribute</button></div>${pro?.extras(l) || ""}${l.mask ? `<div class="mask-panel"><h4>Group mask</h4>${rangeControl("Feather", "mask.feather", l.mask.feather || 0, 0, 100, 1, "px")}${rangeControl("Density", "mask.density", l.mask.density??100, 0, 100, 1, "%")}<label class="check-row"><input type="checkbox" data-property="mask.disabled" ${l.mask.disabled?"checked":""}> Tạm tắt mask</label><div class="mask-actions"><button data-action="mask-mode">Paint mask</button><button data-action="invert-mask">Invert</button><button data-action="remove-mask">Remove</button></div></div>` : ""}`;
 
   bindProperties(root);
     return;
@@ -971,7 +971,7 @@ function paintEnd(){
 }
 function cancelGesture() {
   pointerBusy=false;updateToolCursor();
-  if (pro?.cancel()) return;
+  if(pro?.cancel()){updateToolCursor();return;}
   if (!gesture) return;
   const g = gesture;
   if (g.paint) {
@@ -1850,6 +1850,8 @@ async function runAction(name) {
   if (!actions[name]) return;
   closeMenu();
   try {
+    if(['undo','redo'].includes(name)&&pro?.undoDraft(name==='redo'))return;
+    if(name==='undo'&&tool==='crop'&&current.crop&&!gesture){current.crop=null;renderContext();requestOverlay();return;}
     if(name==='undo'&&(gesture||pro?.isDrawing())){cancelGesture();return;}
     if (gesture) cancelGesture();
     documentTools?.cancel();
@@ -1883,7 +1885,8 @@ function closeMenu() {
 function commandsModal() {
   showModal("Tìm công cụ", "Gõ tiếng Việt có dấu, không dấu hoặc tên công cụ tiếng Anh.", `<input class="command-search" id="command-search" placeholder="Ví dụ: gọn mặt, xóa người, màu áo…" aria-label="Search commands"><div class="command-list" id="command-list"></div>`, [], () => {
     const renderList = (query) => {
-      const items = searchActions(actionItems,query);
+      const localized=actionItems.map(([id,label,...rest])=>[id,translate(label),...rest]),items=searchActions(localized,query),seen=new Set(items.map(v=>v[0]));
+      for(const item of searchActions(actionItems,query))if(!seen.has(item[0])){items.push(item);seen.add(item[0]);}
       $("#command-list").innerHTML = items.map((a) => `<button data-command-action="${a[0]}">${icon(a[2])}${a[1]}<kbd>${a[3]}</kbd></button>`).join("") || "<p>No matching action.</p>";
       $$("[data-command-action]").forEach((b) => b.onclick = () => {
         closeModal();
@@ -2071,7 +2074,7 @@ $("#blend-mode").onchange = (e) => {
   }
 };
 $("#layer-opacity").oninput = (e) => {
-  const l = layer();
+  const l = layer();if(l)beginPreviewEdit(l.id);
   if (l && canEdit(doc(),l,"geometry")) {
     for (const target of selected(doc())) if (!effectiveLocked(doc(), target)) target.opacity = clamp(Number(e.target.value) || 0, 0, 100) / 100;
     requestRender();
@@ -2088,6 +2091,7 @@ $("#navigator").onclick = (e) => {
   positionBoard();
 };
 function switchDocument(id) {
+  stopPreviewEdit();pointerBusy=false;
   documentTools?.cancel();
   advanced?.cancel();
   photoLab?.cancel();
@@ -2128,6 +2132,7 @@ async function closeDocument(id) {
   assets.prune(sessions.map((s2) => s2.doc));
 }
 document.addEventListener("keydown", (e) => {
+  updateToolCursor(e);
   const typing = e.target.closest("input,textarea,select,[contenteditable=true]"), command = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
   if(command&&key==="k"&&!$("#modal").open){e.preventDefault();runAction("commands");return;}
   if (command && key === "s" && !$("#modal").open) {
@@ -2189,6 +2194,7 @@ document.addEventListener("keydown", (e) => {
     }
   }
   if (e.code === "Space") {
+    if(e.target.closest("button,[role=button],[role=tab]"))return;
     e.preventDefault();
     space = true;updateToolCursor(e);
     $("#stage").classList.add("hand-active");
@@ -2242,6 +2248,7 @@ document.addEventListener("keydown", (e) => {
   else if (t) setTool(t[0]);
 });
 document.addEventListener("keyup", (e) => {
+  updateToolCursor(e);
   if (e.code === "Space") {
     space = false;updateToolCursor(e);
     if (tool !== "hand") $("#stage").classList.remove("hand-active");
@@ -2260,6 +2267,7 @@ document.addEventListener("paste", (e) => {
   }
 });
 document.addEventListener("keydown", (e) => {
+  if(e.target.closest("button,input,select,textarea,[contenteditable=true]"))return;
   const row = e.target.closest("[data-layer],[data-document]");
   if (row && ["Enter", " "].includes(e.key)) {
     e.preventDefault();
@@ -2429,7 +2437,7 @@ Object.assign(actions,documentTools.actions);actionItems.push(...documentTools.a
 actions["type-studio"]=()=>openTypeStudio({doc,layer,commit,showModal,closeModal,toast,requestRender,renderUI});actionItems.push(["type-studio","Type Studio · định dạng chữ theo vùng","text",""]);
 actions['core-sample']=async()=>{const{coreDemo}=await import('./core-demo.js');setDocument(coreDemo(),'Mẫu Luma8');setTool('move');fit();};actionItems.push(['core-sample','Mẫu Luma8 · Layer, alpha, path & chữ','layers','']);
 actions["target-layer"]=()=>{maskMode=false;renderContext();};actions["target-mask"]=()=>{if(!layer()?.mask)throw Error("Lớp chưa có mask.");setTool("move");maskMode=true;renderContext();};
-desktop=createDesktopUI({doc,layer,assets,documentTools,foreground:()=>foreground,setForeground:value=>{foreground=value;$("#foreground").value=value;},commit,addLayer,renderUI,renderLayers,renderHistory,requestRender,runAction,setTool,toast,canvasPoint:pointOnCanvas,selected:()=>selected(doc()),channel:()=>pro.view(),setChannel:v=>pro.setView(v),selectLayer:id=>{documentTools.exitAlpha();documentTools.clearPath();selectLayer(doc(),id);activePanel='properties';maskMode=false;renderUI();requestRender();},openStyles:stylesModal,openFilters:id=>pro.openFilters(id),onLayout:()=>{if(current){positionBoard();requestRender();}}});
+desktop=createDesktopUI({doc,layer,assets,documentTools,previewEdit:()=>{if(layer())beginPreviewEdit(layer().id);},foreground:()=>foreground,setForeground:value=>{foreground=value;$("#foreground").value=value;},commit,addLayer,renderUI,renderLayers,renderHistory,requestRender,runAction,setTool,toast,canvasPoint:pointOnCanvas,selected:()=>selected(doc()),channel:()=>pro.view(),setChannel:v=>pro.setView(v),selectLayer:id=>{documentTools.exitAlpha();documentTools.clearPath();selectLayer(doc(),id);activePanel='properties';maskMode=false;renderUI();requestRender();},openStyles:stylesModal,openFilters:id=>pro.openFilters(id),onLayout:()=>{if(current){positionBoard();requestRender();}}});
 Object.assign(actions,desktop.actions);actionItems.push(...desktop.actionItems);
 const cursorTheme=createCursorTheme({showModal,closeModal,toast});
 Object.assign(actions,cursorTheme.actions);actionItems.push(...cursorTheme.actionItems);

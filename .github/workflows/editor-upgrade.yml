@@ -27,6 +27,8 @@ jobs:
       - name: Check editor JavaScript syntax
         run: |
           for file in dist/*.js desktop/app/*.cjs; do node --check "$file"; done
+      - name: Check editor upgrade regressions
+        run: node --test --test-concurrency=1 tests/editor-kernels.test.mjs tests/editor-upgrade.test.mjs
       - run: node --test --test-concurrency=1 tests/*.test.mjs
   windows-fonts:
     runs-on: windows-latest

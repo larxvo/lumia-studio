@@ -1567,5 +1567,829 @@ export const messages=[
  [
   "Unlock contents before updating the retouch.",
   "Mở khóa nội dung trước khi ghi lại retouch."
+ ],
+ [
+  "Photo editing",
+  "Chỉnh ảnh"
+ ],
+ [
+  "Save contents",
+  "Lưu nội dung"
+ ],
+ [
+  "Save project",
+  "Lưu dự án"
+ ],
+ [
+  "Export image",
+  "Xuất ảnh"
+ ],
+ [
+  "Find tools",
+  "Tìm công cụ"
+ ],
+ [
+  "Find any tool (Ctrl K)",
+  "Tìm mọi công cụ (Ctrl K)"
+ ],
+ [
+  "Edit photos by task",
+  "Chỉnh ảnh theo công việc"
+ ],
+ [
+  "Templates, elements and text",
+  "Mẫu, thành phần và chữ"
+ ],
+ [
+  "Open images, PSD and projects",
+  "Mở ảnh, PSD và dự án"
+ ],
+ [
+  "Generation, colorization and AI connections",
+  "Tạo sinh, tô màu và kết nối AI"
+ ],
+ [
+  "Smart Objects, print color and collaboration",
+  "Smart Objects, màu in và cộng tác"
+ ],
+ [
+  "system",
+  "hệ thống"
+ ],
+ [
+  "bundled",
+  "đi kèm"
+ ],
+ [
+  "Fonts",
+  "Phông chữ"
+ ],
+ [
+  "Fonts installed on this computer",
+  "Phông đã cài trên máy"
+ ],
+ [
+  "Presets & effects",
+  "Preset & hiệu ứng"
+ ],
+ [
+  "Object & floating shadows",
+  "Bóng vật thể & bóng bay"
+ ],
+ [
+  "Select a silhouette; create contact, floating or projected shadows.",
+  "Chọn silhouette, tạo bóng tiếp xúc / treo / chiếu."
+ ],
+ [
+  "Turn photos into art, vectors, dots, crosses and raised blocks.",
+  "Ảnh thành tranh, vector, chấm, dấu + và khối nổi."
+ ],
+ [
+  "Studio presets, seasons, day–night and effects with editable controls.",
+  "Studio, chuyển mùa, ngày–đêm và hiệu ứng có thanh chỉnh."
+ ],
+ [
+  "Portrait",
+  "Chân dung"
+ ],
+ [
+  "Auto portrait",
+  "Auto chân dung"
+ ],
+ [
+  "Slim face and chin, shape eyebrows and reduce oily shine.",
+  "Gọn mặt, cằm, chân mày và giảm bóng dầu."
+ ],
+ [
+  "Skin & texture",
+  "Da & kết cấu"
+ ],
+ [
+  "Natural smoothing, spots, pigmentation and wrinkles.",
+  "Mịn tự nhiên, đốm, sắc tố và rãnh nhăn."
+ ],
+ [
+  "Face & expression",
+  "Mặt & biểu cảm"
+ ],
+ [
+  "Eyes, lips, eyebrows and facial contours.",
+  "Mắt, môi, chân mày và đường nét."
+ ],
+ [
+  "Red eye & eye color",
+  "Mắt đỏ & màu mắt"
+ ],
+ [
+  "One-tap red-eye correction; change iris color.",
+  "Sửa mắt đỏ một chạm; đổi màu mống mắt."
+ ],
+ [
+  "Hair color",
+  "Màu tóc"
+ ],
+ [
+  "Change color, preserve strands and refine the hair mask.",
+  "Đổi màu, giữ sợi và sửa mask tóc."
+ ],
+ [
+  "Beard & moustache",
+  "Râu & ria mép"
+ ],
+ [
+  "Reduce stubble or select a beard style.",
+  "Giảm râu lún phún hoặc chọn kiểu râu."
+ ],
+ [
+  "Cutout & removal",
+  "Tách & xóa"
+ ],
+ [
+  "Background & hair cutout",
+  "Tách nền & tóc"
+ ],
+ [
+  "Select the subject, refine edges and restore missing areas.",
+  "Chọn chủ thể, sửa viền và lấy lại vùng thiếu."
+ ],
+ [
+  "Remove people & objects",
+  "Xóa người & vật thể"
+ ],
+ [
+  "Keep the main person and remove unwanted areas.",
+  "Giữ người chính, xóa phần không mong muốn."
+ ],
+ [
+  "Color & light",
+  "Màu & ánh sáng"
+ ],
+ [
+  "Landscape HDR",
+  "Phong cảnh HDR"
+ ],
+ [
+  "Clear tonal depth, blue skies and warm evenings.",
+  "Rõ tầng sáng, trời trong và chiều ấm."
+ ],
+ [
+  "Clothing color",
+  "Màu trang phục"
+ ],
+ [
+  "Click clothing, select a color and preserve fabric folds.",
+  "Bấm áo / quần, chọn màu, giữ nếp vải."
+ ],
+ [
+  "Product retouch",
+  "Retouch sản phẩm"
+ ],
+ [
+  "Clean bright silver, surface detail and lighting.",
+  "Bạc sạch sáng, bề mặt và ánh sáng."
+ ],
+ [
+  "Beverage & background",
+  "Đồ uống & hậu cảnh"
+ ],
+ [
+  "Cup color, ink removal, backgrounds, sunlight and bokeh.",
+  "Màu ly, xóa mực, nền, nắng và bokeh."
+ ],
+ [
+  "Restoration & documents",
+  "Phục hồi & tài liệu"
+ ],
+ [
+  "Restore old photos",
+  "Phục hồi ảnh cũ"
+ ],
+ [
+  "Fading, noise, scratches and light staining.",
+  "Bạc màu, nhiễu, xước và ố nhẹ."
+ ],
+ [
+  "Clean documents",
+  "Làm sạch tài liệu"
+ ],
+ [
+  "Even paper, softer shadows and clearer existing text and stamps.",
+  "Đều giấy, dịu bóng, rõ chữ và dấu hiện có."
+ ],
+ [
+  "Restore from reference",
+  "Phục hồi từ tham chiếu"
+ ],
+ [
+  "Patch missing areas with reference material you provide.",
+  "Vá vùng thiếu từ tư liệu bạn cung cấp."
+ ],
+ [
+  "AI creation & restoration",
+  "Tạo & phục hồi bằng AI"
+ ],
+ [
+  "Select an area to fill or reconstruct.",
+  "Chọn vùng để vá hoặc tái dựng."
+ ],
+ [
+  "Colorize black-and-white photos",
+  "Tô màu ảnh đen trắng"
+ ],
+ [
+  "Create a colorized version to review and refine.",
+  "Tạo bản tô màu để xem và chỉnh tiếp."
+ ],
+ [
+  "AI expression",
+  "Biểu cảm AI"
+ ],
+ [
+  "Smile or close the mouth through your connected AI service.",
+  "Cười / khép miệng qua máy AI đã kết nối."
+ ],
+ [
+  "AI beard removal / styling",
+  "Xóa / tạo râu AI"
+ ],
+ [
+  "Remove beard areas or generate a style with your AI service.",
+  "Xóa vùng râu hoặc tạo kiểu từ máy AI."
+ ],
+ [
+  "Generative Art & 3D",
+  "Art & 3D tạo sinh"
+ ],
+ [
+  "Transform photo style through ComfyUI.",
+  "Chuyển phong cách từ ảnh qua ComfyUI."
+ ],
+ [
+  "AI skin retouch",
+  "Retouch vùng da AI"
+ ],
+ [
+  "Select an area and retouch visible marks.",
+  "Chọn vùng rồi xử lý dấu vết."
+ ],
+ [
+  "Connections",
+  "Kết nối"
+ ],
+ [
+  "Connect AI service",
+  "Kết nối máy AI"
+ ],
+ [
+  "Configure your ComfyUI service.",
+  "Thiết lập ComfyUI của bạn."
+ ],
+ [
+  "Layers & print color",
+  "Layer & màu in"
+ ],
+ [
+  "Layer & layout tools",
+  "Công cụ layer & bố cục"
+ ],
+ [
+  "Alignment, transforms, filters and paths.",
+  "Căn chỉnh, biến đổi, filter và đường dẫn."
+ ],
+ [
+  "Manage, edit and replace embedded content.",
+  "Quản lý, sửa và thay nội dung nhúng."
+ ],
+ [
+  "Soft-proof print colors and export TIFF with a profile.",
+  "Xem thử màu in và xuất TIFF có profile."
+ ],
+ [
+  "Interchange & collaboration",
+  "Trao đổi & cộng tác"
+ ],
+ [
+  "Canva · open original & retouch",
+  "Canva · mở bản gốc & retouch"
+ ],
+ [
+  "Connect an account, open the original in Canva and transfer pages through Luma.",
+  "Kết nối tài khoản, mở Canva native và chuyển trang qua Luma."
+ ],
+ [
+  "Import PPTX / SVG designs",
+  "Nhập thiết kế PPTX / SVG"
+ ],
+ [
+  "Import design files exported from Canva.",
+  "Nhập tệp thiết kế đã xuất từ Canva."
+ ],
+ [
+  "Collaborative editing",
+  "Đồng biên tập"
+ ],
+ [
+  "Connect and work with others.",
+  "Kết nối và làm việc cùng người khác."
+ ],
+ [
+  "Guided colorization",
+  "Tô màu theo chỉ dẫn"
+ ],
+ [
+  "Choose reference colors for each area.",
+  "Chọn màu tham chiếu theo từng vùng."
+ ],
+ [
+  "Verification & research",
+  "Kiểm tra & nghiên cứu"
+ ],
+ [
+  "Skin surface map",
+  "Bản đồ bề mặt da"
+ ],
+ [
+  "View suggested areas for retouch.",
+  "Xem các vùng gợi ý cho retouch."
+ ],
+ [
+  "Skin model research",
+  "Nghiên cứu mô hình da"
+ ],
+ [
+  "Available local research tools.",
+  "Công cụ nghiên cứu local hiện có."
+ ],
+ [
+  "Verify AI service",
+  "Kiểm chứng máy AI"
+ ],
+ [
+  "Run a ComfyUI job and review its report.",
+  "Chạy job ComfyUI và xem báo cáo."
+ ],
+ [
+  "Application & compatibility",
+  "Ứng dụng & tương thích"
+ ],
+ [
+  "Windows & compatibility",
+  "Windows & tương thích"
+ ],
+ [
+  "Installer, PSD, Canva and GPU verification status.",
+  "Bản cài, PSD, Canva và tình trạng kiểm chứng GPU."
+ ],
+ [
+  "Design essentials",
+  "Cốt lõi thiết kế"
+ ],
+ [
+  "Luma8 · Practice sample",
+  "Luma8 · Mẫu thực hành"
+ ],
+ [
+  "Try layers, masks, alpha, paths and text.",
+  "Thử layer, mask, alpha, path và chữ."
+ ],
+ [
+  "Format individual text ranges.",
+  "Định dạng từng đoạn chữ."
+ ],
+ [
+  "Channels & alpha",
+  "Kênh & alpha"
+ ],
+ [
+  "Save and edit selections.",
+  "Lưu và sửa vùng chọn."
+ ],
+ [
+  "Paths & anchors",
+  "Đường & điểm neo"
+ ],
+ [
+  "Work Path, saved paths and Direct Selection.",
+  "Work Path, đường lưu và Direct Selection."
+ ],
+ [
+  "Luma8 · Layers & text",
+  "Luma8 · Layer & chữ"
+ ],
+ [
+  "Seasons & lighting",
+  "Mùa & ánh sáng"
+ ],
+ [
+  "Clothing",
+  "Trang phục"
+ ],
+ [
+  "Old photos",
+  "Ảnh cũ"
+ ],
+ [
+  "Output",
+  "Đầu ra"
+ ],
+ [
+  "Keep selection",
+  "Giữ vùng chọn"
+ ],
+ [
+  "Create / replace layer mask",
+  "Tạo / thay mask lớp"
+ ],
+ [
+  "Left indent",
+  "Lề trái"
+ ],
+ [
+  "Right indent",
+  "Lề phải"
+ ],
+ [
+  "First line",
+  "Dòng đầu"
+ ],
+ [
+  "Before paragraph",
+  "Trước đoạn"
+ ],
+ [
+  "After paragraph",
+  "Sau đoạn"
+ ],
+ [
+  "Paragraph alignment",
+  "Canh đoạn"
+ ],
+ [
+  "Temporarily disable mask",
+  "Tạm tắt mask"
+ ],
+ [
+  "Retouch · presets & controls",
+  "Retouch · preset & thông số"
+ ],
+ [
+  "Cutout · edges & masks",
+  "Tách nền · viền & mask"
+ ],
+ [
+  "Remove objects · regions & background",
+  "Xóa vật thể · vùng & nền"
+ ],
+ [
+  "documents · paper, text & stamps",
+  "tài liệu · giấy, chữ & dấu"
+ ],
+ [
+  "Product retouch · color & lighting",
+  "Retouch sản phẩm · màu & ánh sáng"
+ ],
+ [
+  "beverage",
+  "đồ uống"
+ ],
+ [
+  "clothing color",
+  "màu trang phục"
+ ],
+ [
+  "Invalid export dimensions.",
+  "Kích thước xuất không hợp lệ."
+ ],
+ [
+  "Print resolution (DPI)",
+  "Độ phân giải in (DPI)"
+ ],
+ [
+  "DPI determines print size; pixel count stays unchanged. Export CMYK / ICC under Advanced → Print color.",
+  "DPI xác định kích thước in; số pixel được giữ. Xuất CMYK / ICC qua Nâng cao → Màu in."
+ ],
+ [
+  "Created by",
+  "Được tạo bởi"
+ ],
+ [
+  "Find your tools",
+  "Tìm đúng nơi"
+ ],
+ [
+  "Photo editing:",
+  "Chỉnh ảnh:"
+ ],
+ [
+  "portraits, cutouts, object removal, color, lighting and restoration.",
+  "chân dung, tách nền, xóa vật thể, màu, ánh sáng và phục hồi."
+ ],
+ [
+  "Design:",
+  "Thiết kế:"
+ ],
+ [
+  "templates, elements and text.",
+  "mẫu, thành phần và chữ."
+ ],
+ [
+  "AI / Advanced:",
+  "AI / Nâng cao:"
+ ],
+ [
+  "generation, Smart Objects, print color and collaboration.",
+  "tạo sinh, Smart Objects, màu in và cộng tác."
+ ],
+ [
+  "Window:",
+  "Cửa sổ:"
+ ],
+ [
+  "layouts, panels, histogram, channels and vector paths.",
+  "bố trí, panel, histogram, kênh và đường vector."
+ ],
+ [
+  "Keyboard shortcuts",
+  "Phím tắt"
+ ],
+ [
+  "Ctrl K · Find tools",
+  "Ctrl K · Tìm công cụ"
+ ],
+ [
+  "Ctrl S · Save project",
+  "Ctrl S · Lưu dự án"
+ ],
+ [
+  "Ctrl Shift S · Export image",
+  "Ctrl Shift S · Xuất ảnh"
+ ],
+ [
+  "Ctrl 0 / Ctrl 1 · Fit / 100%",
+  "Ctrl 0 / Ctrl 1 · Vừa màn hình / 100%"
+ ],
+ [
+  "Space · Pan · Tab · Show/hide dock",
+  "Space · Kéo ảnh · Tab · Ẩn/hiện dock"
+ ],
+ [
+  "Current formats & capabilities",
+  "Định dạng và khả năng hiện tại"
+ ],
+ [
+  "Start editing",
+  "Bắt đầu chỉnh sửa"
+ ],
+ [
+  "Find tools",
+  "Tìm công cụ"
+ ],
+ [
+  "Search in Vietnamese with or without accents, or use English tool names.",
+  "Gõ tiếng Việt có dấu, không dấu hoặc tên công cụ tiếng Anh."
+ ],
+ [
+  "For example: slim face, remove people, clothing color…",
+  "Ví dụ: gọn mặt, xóa người, màu áo…"
+ ],
+ [
+  "Photo editing · all tools",
+  "Chỉnh ảnh · tất cả công cụ"
+ ],
+ [
+  "Select & Mask · refine selection",
+  "Select & Mask · tinh chỉnh vùng chọn"
+ ],
+ [
+  "Canva · open original & retouch",
+  "Canva · mở native & retouch"
+ ],
+ [
+  "Embedded Smart Object",
+  "Smart Object nhúng"
+ ],
+ [
+  "Independent mask",
+  "Mask độc lập"
+ ],
+ [
+  "Mask follows contents",
+  "Mask đi cùng nội dung"
+ ],
+ [
+  "Edit mask · Shift-click to enable/disable",
+  "Sửa mask · Shift-click bật/tắt"
+ ],
+ [
+  "Effects",
+  "Hiệu ứng"
+ ],
+ [
+  "Toggle filters",
+  "Bật/tắt bộ lọc"
+ ],
+ [
+  "Edit filters",
+  "Sửa bộ lọc"
+ ],
+ [
+  "editable",
+  "có thể sửa"
+ ],
+ [
+  "Enable Luma cursor",
+  "Dùng con trỏ Luma"
+ ],
+ [
+  "Dark arrow · mint outline",
+  "Mũi tên tối · viền sáng mint"
+ ],
+ [
+  "Cursor brightness",
+  "Độ sáng con trỏ"
+ ],
+ [
+  "Cursor size",
+  "Kích thước con trỏ"
+ ],
+ [
+  "Luma cursor on dark background",
+  "Con trỏ Luma trên nền tối"
+ ],
+ [
+  "Luma cursor on light background",
+  "Con trỏ Luma trên nền sáng"
+ ],
+ [
+  "System cursor",
+  "Con trỏ hệ thống"
+ ],
+ [
+  "Luma cursor · preview",
+  "Con trỏ Luma · đang xem trước"
+ ],
+ [
+  "Using the system cursor for the computer's high-contrast mode.",
+  "Đang dùng con trỏ hệ thống theo chế độ tương phản cao của máy."
+ ],
+ [
+  "Painting, text editing and resize handles keep their own cursors. Applies inside the Luma editor.",
+  "Cọ vẽ, nhập chữ và kéo đổi kích thước giữ con trỏ riêng. Áp dụng trong giao diện biên tập Luma."
+ ],
+ [
+  "Default",
+  "Mặc định"
+ ],
+ [
+  "Luma cursor saved.",
+  "Đã lưu con trỏ Luma."
+ ],
+ [
+  "Applied for this session. Preference storage is unavailable.",
+  "Đã áp dụng cho phiên này. Bộ nhớ tùy chọn hiện không ghi được."
+ ],
+ [
+  "Appearance & Luma cursor",
+  "Giao diện & con trỏ Luma"
+ ],
+ [
+  "LIVE LAYERS",
+  "LỚP ĐIỀU CHỈNH"
+ ],
+ [
+  "CURATED LOOKS",
+  "TÔNG MÀU CHỌN LỌC"
+ ],
+ [
+  "Soft film",
+  "Phim dịu"
+ ],
+ [
+  "Golden hour",
+  "Giờ vàng"
+ ],
+ [
+  "Monochrome",
+  "Đơn sắc"
+ ],
+ [
+  "Shape the light, keep your original. Every adjustment stays editable.",
+  "Tạo ánh sáng, giữ ảnh gốc. Mọi điều chỉnh đều có thể sửa."
+ ],
+ [
+  "Transform group",
+  "Biến đổi nhóm"
+ ],
+ [
+  "Rasterize",
+  "Chuyển thành pixel"
+ ],
+ [
+  "Align / distribute",
+  "Căn chỉnh / phân bố"
+ ],
+ [
+  "Group mask",
+  "Mặt nạ nhóm"
+ ],
+ [
+  "Density",
+  "Mật độ"
+ ],
+ [
+  "Your canvas",
+  "Khung ảnh"
+ ],
+ [
+  "READY",
+  "SẴN SÀNG"
+ ],
+ [
+  "Add an image, type, a shape or a paint layer to begin.",
+  "Thêm ảnh, chữ, hình hoặc lớp vẽ để bắt đầu."
+ ],
+ [
+  "Place image",
+  "Đặt ảnh"
+ ],
+ [
+  "DOCUMENT",
+  "TÀI LIỆU"
+ ],
+ [
+  "EFFECTS",
+  "HIỆU ỨNG"
+ ],
+ [
+  "SOURCE",
+  "NGUỒN"
+ ],
+ [
+  "BACKGROUND",
+  "NỀN"
+ ],
+ [
+  "GROUP",
+  "NHÓM"
+ ],
+ [
+  "Document name",
+  "Tên tài liệu"
+ ],
+ [
+  "Layer name",
+  "Tên lớp"
+ ],
+ [
+  "Rename layer",
+  "Đổi tên lớp"
+ ],
+ [
+  "Adjustment",
+  "Điều chỉnh"
+ ],
+ [
+  "Smart Filters",
+  "Bộ lọc thông minh"
+ ],
+ [
+  "Live Filters",
+  "Bộ lọc trực tiếp"
+ ],
+ [
+  "New layer",
+  "Lớp mới"
+ ],
+ [
+  "Position lock",
+  "Khóa vị trí"
+ ],
+ [
+  "Pixel lock",
+  "Khóa pixel"
+ ],
+ [
+  "Transparency lock",
+  "Khóa độ trong"
+ ],
+ [
+  "Add a mask",
+  "Thêm mặt nạ"
+ ],
+ [
+  "Delete layer",
+  "Xóa lớp"
+ ],
+ [
+  "Duplicate layer",
+  "Nhân bản lớp"
+ ],
+ [
+  "Link mask",
+  "Liên kết mặt nạ"
+ ],
+ [
+  "New group",
+  "Nhóm mới"
  ]
 ];

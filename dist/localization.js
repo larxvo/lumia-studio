@@ -6,8 +6,8 @@ let active='en';
 export function translate(value,language=active){
  const original=String(value),text=original.trim(),catalog=catalogs[language]||catalogs.en;let result=catalog.get(text);
  if(result===undefined){
-  const count=text.match(/^(\d+)\s+(selected|items|fonts|paths|anchors|holes|đã chọn|mục|phông|đường|điểm neo|lỗ)$/u);
-  if(count){const labels={selected:['selected','đã chọn'],'đã chọn':['selected','đã chọn'],items:['items','mục'],mục:['items','mục'],fonts:['fonts','phông'],phông:['fonts','phông'],paths:['paths','đường'],đường:['paths','đường'],anchors:['anchors','điểm neo'],'điểm neo':['anchors','điểm neo'],holes:['holes','lỗ'],lỗ:['holes','lỗ']};result=count[1]+' '+labels[count[2]][language==='vi'?1:0];}
+  const count=text.match(/^(\d+)\s+(selected|items|fonts|paths|anchors|holes|layers|đã chọn|mục|phông|đường|điểm neo|lỗ|lớp)$/u);
+  if(count){const labels={layers:['layers','lớp'],lớp:['layers','lớp'],selected:['selected','đã chọn'],'đã chọn':['selected','đã chọn'],items:['items','mục'],mục:['items','mục'],fonts:['fonts','phông'],phông:['fonts','phông'],paths:['paths','đường'],đường:['paths','đường'],anchors:['anchors','điểm neo'],'điểm neo':['anchors','điểm neo'],holes:['holes','lỗ'],lỗ:['holes','lỗ']};result=count[1]+' '+labels[count[2]][language==='vi'?1:0];}
   else if(text.includes(' · ')){const parts=text.split(' · ').map(p=>translate(p,language));const joined=parts.join(' · ');if(joined!==text)result=joined;}
   if(result===undefined){for(const [en,vi]of [['Unlock','Mở khóa'],['Lock','Khóa'],['Hide','Ẩn'],['Show','Hiện'],['Close','Đóng']]){const prefix=text.startsWith(en+' ')?en:text.startsWith(vi+' ')?vi:null;if(prefix){result=(language==='vi'?vi:en)+text.slice(prefix.length);break;}}}
  }
