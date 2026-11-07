@@ -53,6 +53,10 @@ Automatic selection can need correction around hair, fingers, transparent materi
 
 Captured in Luma Studio. Screenshots document the displayed build; they are not generated interface mockups.
 
+**Luma cursor · 9.1.0:** a dark arrow with a mint glow, adjustable brightness/size and saved preferences. Open **Sửa → Giao diện & con trỏ Luma**. Drawing, text and panel-resize cursors retain their tool meaning.
+
+![Luma cursor settings with previews on light and dark surfaces](qa/luma-cursor-settings-9.1.0.png)
+
 ![Layer styles, editable effects and contextual controls](qa/desktop-7.2-styles.png)
 
 ## Formats and integrations

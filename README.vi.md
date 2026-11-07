@@ -34,6 +34,10 @@ Bộ cài hiện **chưa ký số**. Kết quả kiểm tra dữ liệu đóng g
 
 Ảnh chụp trực tiếp giao diện Luma Studio theo phiên bản hiển thị, giúp xem các công cụ và bố cục ứng dụng.
 
+**Con trỏ Luma · 9.1.0:** mũi tên tối, viền sáng mint, có thanh chỉnh độ sáng/kích thước và nhớ lựa chọn. Mở **Sửa → Giao diện & con trỏ Luma**; con trỏ vẽ, nhập chữ và kéo panel giữ đúng chức năng.
+
+![Tùy chọn con trỏ Luma trên nền sáng và tối](qa/luma-cursor-settings-9.1.0.png)
+
 ![Layer styles, editable effects and contextual controls](qa/desktop-7.2-styles.png)
 
 ## Phạm vi tương thích

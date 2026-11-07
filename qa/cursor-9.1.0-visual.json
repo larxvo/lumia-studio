@@ -1,0 +1,28 @@
+{
+  "version": "9.1.0",
+  "date": "2026-11-07",
+  "scope": "Managed Chromium editor preview; actual DOM controls and computed cursor styles. Not interactive Windows cursor certification.",
+  "checks": {
+    "edit_menu": true,
+    "command_search": "con trỏ",
+    "svg_previews_decoded": "2 images, 56 × 56 px at default size",
+    "preview_matches_cursor_resource": true,
+    "glow_and_size_controls": "100% glow / 150% size applied live",
+    "saved_after_reload": true,
+    "escape_restores_previous_cursor": true,
+    "disabled_cursor": "system; body cursor auto",
+    "reset_defaults": {
+      "enabled": true,
+      "glow": 65,
+      "size": 100
+    },
+    "brush_cursor": "crosshair",
+    "hand_cursor": "grab",
+    "text_input_cursor": "text",
+    "dock_height_cursor": "ns-resize",
+    "dock_width_cursor": "ew-resize"
+  },
+  "screenshot": "qa/luma-cursor-settings-9.1.0.png",
+  "high_contrast": "Covered by a media-query test double, not OS visual testing.",
+  "windows_installation": "Validated separately by the Windows release workflow."
+}

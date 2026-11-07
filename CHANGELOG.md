@@ -1,5 +1,12 @@
 # Changelog
 
+## 9.1.0 — Luma cursor
+
+- Add the dark arrow with a mint outline and soft glow as a real native CSS cursor in the editing interface, enabled by default.
+- Add Edit → Giao diện & con trỏ with light/dark previews, adjustable glow/size, live preview, save/cancel/reset and persisted preferences.
+- Preserve tool, text and resize cursors; restore system cursors in high-contrast mode or when the user disables the theme. No mouse-following overlay, timers or additional runtime dependencies.
+- Add the preference entry to the Windows menu, refresh version labels and retain the 9.0.2 layer-panel fixes.
+
 ## 9.0.2 — Usable layer panels on laptop screens
 
 - Fix the layer stack collapsing to a 6-pixel scroll area at 1280 × 720. The upper inspectors and lower panels now have independent, bounded layouts.

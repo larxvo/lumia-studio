@@ -6,7 +6,7 @@
 2. Compare the file's SHA-256 with the accompanying `.sha256` file. In PowerShell:
 
    ```powershell
-   Get-FileHash .\Luma-Studio-9.0.2-Setup-x64.exe -Algorithm SHA256
+   Get-FileHash .\Luma-Studio-9.1.0-Setup-x64.exe -Algorithm SHA256
    ```
 
 3. Run setup for your Windows account. Choose an empty folder or an existing Luma installation. The editor does not need Node.js or Python installed separately.
@@ -32,6 +32,12 @@ The Windows/NVIDIA companion scripts in `gpu-kit/` are separate from the editor 
 ## Optional Canva
 
 See [Canva setup](CANVA.md). The current connector needs a configured Canva Developer app; it is not yet a turnkey shared public OAuth service.
+
+## Luma cursor
+
+Version 9.1.0 includes the mint-glow arrow as an actual cursor, enabled by default in the editing interface. Open **Sửa → Giao diện & con trỏ Luma** (also available from the desktop Edit menu or Ctrl+K). Preview it on light/dark surfaces, adjust glow and size, then save. Cancel restores the previous settings; preferences persist between launches.
+
+Turn **Dùng con trỏ Luma** off to use the system cursor. Drawing/crosshair, text and resize cursors retain their tool meaning. High-contrast mode uses system cursors. Native Windows title bars, menus and file dialogs keep Windows cursors; the feature applies inside the Luma editor.
 
 ## Layer panels
 

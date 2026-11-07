@@ -354,7 +354,7 @@ function createPhotoLab(api, { analyzerFactory = () => createPhotoWorker("analyz
         params.keepFreckles = e.target.checked;record("Đổi vùng xử lý");
         schedule();
       };
-      $("#lab-preview").style.cursor = brush === "view" ? "default" : "crosshair";
+      $("#lab-preview").style.cursor = brush === "view" ? "var(--luma-cursor-default, default)" : "crosshair";
       for (const b of document.querySelectorAll("[data-lab-brush]")) b.classList.toggle("active", b.dataset.labBrush === brush);
     }
     async function apply() {

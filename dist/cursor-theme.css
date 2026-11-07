@@ -1,0 +1,26 @@
+body{cursor:var(--luma-cursor-default,auto)}
+a,select,summary,[role=button],[role=tab],input[type=checkbox],input[type=radio],input[type=color]{cursor:var(--luma-cursor-pointer,pointer)}
+input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]):not([type=button]):not([type=submit]):not([type=file]),textarea,[contenteditable=true]{cursor:text}
+.cursor-settings{max-width:480px;margin:0 auto}
+.cursor-preview-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 22px}
+.cursor-preview-surface{height:148px;display:flex;align-items:center;justify-content:center;border:1px solid #50685d;border-radius:10px;position:relative;overflow:hidden}
+.cursor-preview-surface>span{position:absolute;top:12px;left:14px;font-size:9px;font-weight:500;letter-spacing:1px;opacity:.68}
+.cursor-preview-dark{background:radial-gradient(ellipse at center,#2c4038,#17241f);color:#c3dfd1}
+.cursor-preview-light{background:linear-gradient(135deg,#f3f5ee,#dae6dd);color:#304c3e}
+.cursor-preview-surface img{height:auto;max-width:84px;pointer-events:none}
+.cursor-preview-surface small{font-size:10px}
+.cursor-toggle{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:0 0 18px;border-bottom:1px solid #3c4d44;margin-bottom:22px}
+.cursor-toggle strong{display:block;font-size:13px;font-weight:500;color:#e1ede7}
+.cursor-toggle small{display:block;font-size:11px;color:#9cafaa;margin-top:5px}
+.cursor-toggle input{width:17px;height:17px;accent-color:var(--mint);flex:none}
+.cursor-setting-row{display:block;margin:18px 0;color:#c0d2c8;font-size:12px}
+.cursor-setting-row>span{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.cursor-setting-row output{font-size:11px;color:var(--mint);font-variant-numeric:tabular-nums}
+.cursor-setting-row input{width:100%;accent-color:var(--mint);cursor:ew-resize}
+.cursor-setting-row:has(input:disabled){opacity:.4}
+.cursor-state{font-size:11px;color:#b1d5c3;margin:22px 0 9px}
+.cursor-hint{font-size:11px;line-height:1.7;color:#94a99c;margin:0}
+#modal:has(.cursor-settings){width:540px;max-width:calc(100vw - 30px)}
+#modal:has(.cursor-settings) .modal-foot>button:first-child{margin-right:auto}
+.cursor-settings [hidden]{display:none!important}
+@media(forced-colors:active){html{--luma-cursor-default:auto!important;--luma-cursor-pointer:pointer!important}}
