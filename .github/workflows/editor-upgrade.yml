@@ -1,0 +1,58 @@
+name: Editor upgrade validation
+on:
+  push:
+    branches: [upgrade/editor-9-2-tools]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: editor-upgrade-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  editor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run build
+      - name: Check editor JavaScript syntax
+        run: |
+          for file in dist/*.js desktop/app/*.cjs; do node --check "$file"; done
+      - name: Check editor upgrade regressions
+        run: node --test --test-concurrency=1 tests/editor-kernels.test.mjs tests/editor-upgrade.test.mjs
+      - run: node --test --test-concurrency=1 tests/*.test.mjs
+  windows-fonts:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - name: Enumerate actual installed Windows fonts
+        shell: pwsh
+        run: |
+          node -e "const assert=require('node:assert/strict');const {enumerateSystemFonts}=require('./desktop/app/system-fonts.cjs');(async()=>{const a=await enumerateSystemFonts();assert.equal(a.source,'system');assert.ok(a.families.length>10);assert.ok(a.families.includes('Arial'));const b=await enumerateSystemFonts();assert.deepEqual(a,b);console.log(JSON.stringify({platform:process.platform,count:a.families.length,sample:a.families.slice(0,12)}));})().catch(e=>{console.error(e);process.exitCode=1;});"
+  locale-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - run: npm install --prefix .locale-audit --no-save --package-lock=false --ignore-scripts acorn@8.15.0
+      - run: node scripts/audit-locales.mjs

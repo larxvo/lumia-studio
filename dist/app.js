@@ -21,6 +21,12 @@ import { VERSION, BLENDS, MAX_PIXELS, clamp, uid, clone, defaults, createLayer, 
 import { Assets, canvas, renderDocument, renderLayer, maskCanvas, thumbnail, embeddedDocument } from "./renderer.js";
 import { icon, icons } from "./icons.js";
 import { saveLocal, recentLocal, downloadBlob } from "./storage.js";
+import {initializeLocalization,translate,openLanguagePreferences} from './localization.js';
+import {fontFamilies,fontCatalogStatus,loadSystemFonts,onFontsChanged} from './font-catalog.js';
+import {cropRatio,cropRect,moveCrop,exactCrop} from './crop-geometry.js';
+import {createToolCursors,TOOL_HINTS} from './tool-cursors.js';
+import {createTraceStudio} from './trace-ui.js';
+const localization=await initializeLocalization();
 const $ = (s, root = document) => root.querySelector(s), $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const titleCase = (s) => s.replace(/(^|[-/ ])\w/g, (x) => x.toUpperCase()).replaceAll("-", " ");
@@ -31,6 +37,12 @@ let documentTools=null;
 let desktop=null,selectionFeather=0,selectionAntiAlias=true;
 let workspace = null, photoLab = null, pro = null, advanced = null, layerQuery = "", layerKind = "all", selectionMode = "replace", wandTolerance = 32;
 let current = null, tool = "move", autoSelect = true, showTransform = true, maskMode = false, brushSize = 40, brushOpacity = 100, shapeType = "rect", foreground = "#eef4f3", background = "#152a27", space = false, grid = false, activePanel = "properties", layerTab = "layers", gesture = null, hover = null, frame = 0, composite = null, renderScale = 1, stats = null, saveTimers = /* @__PURE__ */ new Map(), menuOpen = false, modalCancel = null, editingText = null, curveDragging = null;
+let pointerBusy=false,previewEditId=null,previewEditTimer=0,brushHardness=85,cropAspect='free',overlayFrame=0,toolCursors=null;
+const performanceStats={renders:0,overlays:0,lastRenderMs:0,maxRenderMs:0,paintSegments:0};
+function stopPreviewEdit(){clearTimeout(previewEditTimer);previewEditId=null;}
+function beginPreviewEdit(id){clearTimeout(previewEditTimer);previewEditId=id;previewEditTimer=setTimeout(()=>{previewEditId=null;requestRender();},140);}
+function requestOverlay(){if(overlayFrame)return;overlayFrame=requestAnimationFrame(()=>{overlayFrame=0;renderOverlay();});}
+function updateToolCursor(e={}){toolCursors?.update(e);}
 const doc = () => current?.doc, layer = () => doc()?.layers.find((l) => l.id === doc().activeId);
 function moveLayer(target, dx, dy) {
   if (target.type === "group") moveObjects(doc(), [target], dx, dy);
@@ -57,6 +69,7 @@ function busy(label) {
 }
 function commit(label) {
   if (!current) return;
+  stopPreviewEdit();
   current.history.push(doc(), label);
   advanced?.collaboration.localCommitted(doc(),label);
   renderUI();
@@ -81,6 +94,7 @@ function scheduleSave(session) {
   }, 850));
 }
 function setDocument(next, label = "Document opened") {
+  stopPreviewEdit();pointerBusy=false;if(gesture)cancelGesture();
   documentTools?.cancel();
   advanced?.cancel();
   photoLab?.cancel();
@@ -141,7 +155,7 @@ function renderTools() {
   root.innerHTML = tools.map(([name, label, key], i) => `${i === 6 || i === 12 ? '<div class="tool-separator"></div>' : ""}<button class="tool-button ${name === tool ? "active" : ""}" data-tool="${name}" title="${label} (${key})" aria-label="${label}" aria-pressed="${name === tool}">${icon(name)}</button>`).join("");
 }
 function setTool(next) {
-  if(next!==tool){documentTools?.cancel();pro?.cancel();}
+  if(next!==tool){if(gesture)cancelGesture();documentTools?.cancel();pro?.cancel();if(tool==="crop"&&current)current.crop=null;pointerBusy=false;}
   finishText();
   tool = next;
   maskMode = ["brush","eraser","move"].includes(next) ? maskMode : false;
@@ -151,15 +165,16 @@ function setTool(next) {
   const mode = next === "hand" ? "hand-active" : ["brush", "eraser"].includes(next) ? "paint-active" : ["select", "ellipse", "lasso", "crop", "wand", "shape", "gradient"].includes(next) ? "crop-active" : "";
   $("#stage").classList.remove("hand-active", "paint-active", "crop-active");
   if (mode) $("#stage").classList.add(mode);
-  $("#status-hint").textContent = `${tools.find((t) => t[0] === tool)?.[1] || tool} · ${tools.find((t) => t[0] === tool)?.[2] || ""}`;
+  $("#status-hint").textContent = TOOL_HINTS[tool]||tool;
+  updateToolCursor();
 }
 function renderContext() {
   const name = tools.find((t) => t[0] === tool)?.[1] || tool;
   let controls = "";
   if (tool === "move") controls = `<label><input id="auto-select" type="checkbox" ${autoSelect ? "checked" : ""}> Auto-select</label><select id="auto-mode" aria-label="Auto select mode"><option>Layer</option></select><label class="check-secondary"><input id="show-transform" type="checkbox" ${showTransform ? "checked" : ""}> Transform controls</label>`;
-  else if (tool === "brush" || tool === "eraser") controls = `<label>Size <input id="brush-size" type="number" min="1" max="600" value="${brushSize}"> px</label><label>Opacity <input id="brush-opacity" type="number" min="1" max="100" value="${brushOpacity}"> %</label><button class="button ${maskMode ? "primary" : ""}" data-action="mask-mode">${maskMode ? "Painting mask" : "Paint mask"}</button><span class="context-extra">${tool === "eraser" ? "Hide" : "Reveal"} with pressure-sensitive strokes</span>`;
+  else if (tool === "brush" || tool === "eraser") controls = `<label>Size <input id="brush-size" type="number" min="1" max="600" value="${brushSize}"> px</label><label>Hardness <input id="brush-hardness" type="number" min="0" max="100" value="${brushHardness}"> %</label><label>Opacity <input id="brush-opacity" type="number" min="1" max="100" value="${brushOpacity}"> %</label><button class="button ${maskMode ? "primary" : ""}" data-action="mask-mode">${maskMode ? "Painting mask" : "Paint mask"}</button><span class="context-extra">${tool === "eraser" ? "Hide" : "Reveal"} with pressure-sensitive strokes</span>`;
   else if (["select", "ellipse", "lasso", "wand"].includes(tool)) controls = `<span class="context-extra">${tool === "wand" ? "Click a connected color region" : "Drag to select an area"}</span><button class="button" data-action="add-mask">Make mask</button><button class="button" data-action="invert-selection">Invert</button><button class="button" data-action="deselect">Deselect</button>`;
-  else if (tool === "crop") controls = `<span class="context-extra">Drag a crop area</span><button class="button" data-action="apply-crop">Apply crop</button><button class="button" data-action="deselect">Cancel</button>`;
+  else if(tool==='crop')controls=`<label>Ratio <select id="crop-ratio">${[['free','Free'],['original','Original'],['1:1','1:1'],['4:5','4:5'],['3:2','3:2'],['2:3','2:3'],['16:9','16:9'],['9:16','9:16'],['210:297','A4']].map(([v,n])=>`<option value="${v}" ${cropAspect===v?'selected':''}>${n}</option>`).join('')}</select></label><label>W <input id="crop-width" type="number" min="1" max="${doc()?.width||1}" value="${Math.round(current?.crop?.width||doc()?.width||1)}"> px</label><label>H <input id="crop-height" type="number" min="1" max="${doc()?.height||1}" value="${Math.round(current?.crop?.height||doc()?.height||1)}"> px</label><button class="button" data-action="apply-crop" ${current?.crop?'':'disabled'}>Apply crop</button><button class="button" data-action="cancel-crop">Cancel</button><span class="context-extra">Drag a crop · Enter applies · Escape cancels</span>`;
   else if (tool === "text") controls = `<span class="context-extra">Click to add type · Double-click text to edit</span><button class="button" data-action="add-text">Add text layer</button>`;
   else if (tool === "shape" || tool === "gradient") controls = `<select id="shape-type" aria-label="Shape type">${["rect", "ellipse", "triangle", "star", "line"].map((s) => `<option value="${s}" ${s === shapeType ? "selected" : ""}>${titleCase(s)}</option>`).join("")}</select><span class="context-extra">Drag to draw · Shift for equal sides</span>`;
   else if (tool === "hand") controls = '<span class="context-extra">Drag to pan · Hold Space with any tool</span><button class="button" data-action="fit">Fit canvas</button>';
@@ -170,6 +185,8 @@ function renderContext() {
   if(tool==="move"&&layer()?.mask)controls+=`<button class="context-target" data-action="target-layer">Nội dung</button><button class="context-target" data-action="target-mask">Mask ${layer().mask.linked===false?"độc lập":"liên kết"}</button>`;
   if (["select", "ellipse", "lasso", "wand"].includes(tool)) controls = `<select id="selection-mode" aria-label="Selection mode">${[["replace", "New selection"], ["add", "Add to selection"], ["subtract", "Subtract"], ["intersect", "Intersect"]].map(([v, n]) => `<option value="${v}" ${selectionMode === v ? "selected" : ""}>${n}</option>`).join("")}</select>${tool === "wand" ? `<label>Tolerance <input id="wand-tolerance" type="number" min="0" max="255" value="${wandTolerance}"></label>` : ""}` + `<label>Feather <input id="selection-feather" type="number" min="0" max="100" value="${selectionFeather}"> px</label><label><input id="selection-antialias" type="checkbox" ${selectionAntiAlias?"checked":""}> Anti-alias</label><button class="button" data-action="select-mask">Select &amp; Mask</button>` + controls;
   $("#tool-context").innerHTML = `<span class="context-name">${icon(tool)} ${esc(name)}</span>${controls}`;
+  $('#crop-ratio')?.addEventListener('change',e=>{cropAspect=e.target.value;if(current.crop){current.crop=exactCrop(current.crop,current.crop.width,current.crop.height,doc(),cropRatio(cropAspect,doc()));renderContext();requestOverlay();}});
+  for(const key of ['width','height'])$('#crop-'+key)?.addEventListener('change',()=>{const w=Number($('#crop-width').value),h=Number($('#crop-height').value);if(!Number.isFinite(w)||!Number.isFinite(h))return;current.crop=exactCrop(current.crop,w,h,doc(),cropRatio(cropAspect,doc()),key);renderContext();requestOverlay();});
   $("#selection-feather")?.addEventListener("change",e=>selectionFeather=clamp(Number(e.target.value)||0,0,100));
   $("#selection-antialias")?.addEventListener("change",e=>selectionAntiAlias=e.target.checked);
   $("#auto-select")?.addEventListener("change", (e) => autoSelect = e.target.checked);
@@ -181,6 +198,7 @@ function renderContext() {
     brushSize = clamp(Number(e.target.value) || 1, 1, 600);
     e.target.value = brushSize;
   });
+  $('#brush-hardness')?.addEventListener('change',e=>{brushHardness=clamp(Number(e.target.value)||0,0,100);e.target.value=brushHardness;});
   $("#brush-opacity")?.addEventListener("change", (e) => {
     brushOpacity = clamp(Number(e.target.value) || 1, 1, 100);
     e.target.value = brushOpacity;
@@ -230,7 +248,7 @@ function renderLayers() {
   }
   walk();
   $("#selection-count").textContent = selection.length > 1 ? selection.length + " selected" : "Shift / Ctrl-click to select";
-  $("#layer-list").innerHTML = ordered.length ? ordered.map(({ l, depth }) => `<div class="layer-row ${selectedSet.has(l.id) ? "selected" : ""} ${!effectiveVisible(d, l) ? "ancestor-hidden" : ""}" style="--depth:${depth}" data-layer="${l.id}" draggable="true" role="button" tabindex="0" aria-label="${esc(l.name)}" aria-pressed="${selectedSet.has(l.id)}"><button class="eye-button ${!l.visible ? "is-hidden" : ""}" data-visibility="${l.id}" title="${l.visible ? "Hide" : "Show"} layer" aria-label="${l.visible ? "Hide" : "Show"} ${esc(l.name)}">${icon(l.visible ? "eye" : "eye-off")}</button>${l.type === "group" ? `<button class="group-toggle" data-group-toggle="${l.id}" title="${l.collapsed ? "Expand" : "Collapse"} group" aria-label="${l.collapsed ? "Expand" : "Collapse"} ${esc(l.name)}">${icon(l.collapsed ? "chevron-right" : "chevron-down")}</button>` : ""}<div class="layer-thumb" data-thumb="${l.id}">${l.type === "group" ? icon("folder") : l.type === "adjustment" ? icon(adjustments.find((a) => a[0] === l.adjustment)?.[2] || "adjust") : l.type === "text" ? '<span class="type-thumb">T</span>' : ""}</div>${l.mask ? `<button class="mask-thumb ${l.id === d.activeId && maskMode ? "active" : ""}" data-edit-mask="${l.id}" title="Edit mask" aria-label="Edit layer mask"></button>` : ""}<div class="layer-name"><strong>${l.clipToBelow ? "↳ " : ""}${esc(l.name)}</strong><small>${l.type === "group" ? children(d, l.id).length + " items" : l.type === "adjustment" ? esc(adjustments.find((a) => a[0] === l.adjustment)?.[1] || l.adjustment) : l.type === "text" ? "Live type" : l.type === "shape" ? "Vector shape" : l.smartObjectId ? "Smart Object" : l.locked ? "Background" : "Pixel layer"}</small></div><span class="layer-meta">${effectiveLocked(d, l) ? icon("lock") : ""}${l.filters?.length ? '<span class="filter-dot" title="Live filters">●</span>' : ""}${hasLayerEffects(l) ? '<span class="fx-symbol">fx</span>' : ""}</span></div>`).join("") : '<p class="empty-layers">No matching layers.</p>';
+  $("#layer-list").innerHTML = ordered.length ? ordered.map(({ l, depth }) => `<div class="layer-row ${selectedSet.has(l.id) ? "selected" : ""} ${!effectiveVisible(d, l) ? "ancestor-hidden" : ""}" style="--depth:${depth}" data-layer="${l.id}" draggable="true" role="button" tabindex="0" aria-label="${esc(l.name)}" aria-pressed="${selectedSet.has(l.id)}"><button class="eye-button ${!l.visible ? "is-hidden" : ""}" data-visibility="${l.id}" title="${l.visible ? "Hide" : "Show"} layer" aria-label="${l.visible ? "Hide" : "Show"} ${esc(l.name)}">${icon(l.visible ? "eye" : "eye-off")}</button>${l.type === "group" ? `<button class="group-toggle" data-group-toggle="${l.id}" title="${l.collapsed ? "Expand" : "Collapse"} group" aria-label="${l.collapsed ? "Expand" : "Collapse"} ${esc(l.name)}">${icon(l.collapsed ? "chevron-right" : "chevron-down")}</button>` : ""}<div class="layer-thumb" data-thumb="${l.id}">${l.type === "group" ? icon("folder") : l.type === "adjustment" ? icon(adjustments.find((a) => a[0] === l.adjustment)?.[2] || "adjust") : l.type === "text" ? '<span class="type-thumb">T</span>' : ""}</div>${l.mask ? `<button class="mask-thumb ${l.id === d.activeId && maskMode ? "active" : ""}" data-edit-mask="${l.id}" title="Edit mask" aria-label="Edit layer mask"></button>` : ""}<div class="layer-name"><strong>${l.clipToBelow ? "↳ " : ""}${esc(l.name)}</strong><small>${l.type === "group" ? children(d, l.id).length + " items" : l.type === "adjustment" ? esc(adjustments.find((a) => a[0] === l.adjustment)?.[1] || l.adjustment) : l.type === "text" ? "Live type" : l.type === "shape" ? "Vector shape" : l.smartObjectId ? "Smart Object" : l.locked ? "Background" : "Pixel layer"}</small></div><button class="layer-lock-button" data-layer-lock="${l.id}" aria-label="${l.locked?'Unlock':'Lock'} ${esc(l.name)}" title="${l.locked?'Unlock layer':effectiveLocked(d,l)?'Locked by parent group':'Lock layer'}" aria-pressed="${!!l.locked}" ${!l.locked&&effectiveLocked(d,l)?'disabled':''}>${icon(l.locked?'lock':'unlock')}</button><span class="layer-meta">${l.filters?.length ? '<span class="filter-dot" title="Live filters">●</span>' : ""}${hasLayerEffects(l) ? '<span class="fx-symbol">fx</span>' : ""}</span></div>`).join("") : '<p class="empty-layers">No matching layers.</p>';
   for (const l of d.layers) {
     if (!["adjustment", "text", "group"].includes(l.type)) {
       const p = $(`[data-thumb="${l.id}"]`);
@@ -275,14 +293,14 @@ function renderProperties() {
     return;
   }
   if (l?.type === "group") {
-    root.innerHTML = `<div class="property-title">${icon("folder")}${esc(l.name)}<span class="badge">GROUP</span></div><p class="panel-description">${subtree(doc(), l.id).length - 1} layers · opacity and masks affect the whole group.</p><div class="studio-button-grid"><button class="button" data-action="transform">Transform group</button><button class="button" data-action="ungroup">Ungroup</button><button class="button" data-action="rasterize">Rasterize</button><button class="button" data-action="studio">Align / distribute</button></div>${pro?.extras(l) || ""}${l.mask ? `<div class="mask-panel"><h4>Group mask</h4>${rangeControl("Feather", "mask.feather", l.mask.feather || 0, 0, 100, 1, "px")}${rangeControl("Density", "mask.density", l.mask.density??100, 0, 100, 1, "%")}<label class="check-row"><input type="checkbox" data-property="mask.disabled" ${l.mask.disabled?"checked":""}> Tạm tắt mask</label><div class="mask-actions"><button data-action="mask-mode">Paint mask</button><button data-action="invert-mask">Invert</button><button data-action="remove-mask">Remove</button></div></div>` : ""}`;
-    if(l?.type==="text"){root.insertAdjacentHTML("beforeend",`<button class="button type-open" data-action="type-studio">Type Studio · định dạng từng đoạn</button><div class="property-small-heading">PARAGRAPH & METRICS</div><div class="control-grid">${[["startIndent","Lề trái",0],["endIndent","Lề phải",0],["firstLineIndent","Dòng đầu",0],["spaceBefore","Trước đoạn",0],["spaceAfter","Sau đoạn",0],["baselineShift","Baseline",0],["horizontalScale","Ngang %",100],["verticalScale","Dọc %",100],["kerning","Kerning",0]].map(([k,n,v])=>numberField(n,k,l[k]??v,k.includes("Scale")?"%":"px")).join("")}</div><label>Canh đoạn<select data-property="align">${["left","center","right","justify"].map(v=>`<option ${v===l.align?"selected":""}>${v}</option>`).join("")}</select></label>`);}
+    root.innerHTML = `<div class="property-title">${icon("folder")}<span data-i18n-ignore>${esc(l.name)}</span><span class="badge">GROUP</span></div><p class="panel-description">${subtree(doc(), l.id).length - 1} layers · opacity and masks affect the whole group.</p><div class="studio-button-grid"><button class="button" data-action="transform">Transform group</button><button class="button" data-action="ungroup">Ungroup</button><button class="button" data-action="rasterize">Rasterize</button><button class="button" data-action="studio">Align / distribute</button></div>${pro?.extras(l) || ""}${l.mask ? `<div class="mask-panel"><h4>Group mask</h4>${rangeControl("Feather", "mask.feather", l.mask.feather || 0, 0, 100, 1, "px")}${rangeControl("Density", "mask.density", l.mask.density??100, 0, 100, 1, "%")}<label class="check-row"><input type="checkbox" data-property="mask.disabled" ${l.mask.disabled?"checked":""}> Tạm tắt mask</label><div class="mask-actions"><button data-action="mask-mode">Paint mask</button><button data-action="invert-mask">Invert</button><button data-action="remove-mask">Remove</button></div></div>` : ""}`;
+
   bindProperties(root);
     return;
   }
   if (!l) {
     root.innerHTML = `<div class="property-title">${icon("image")}Your canvas <span class="badge">READY</span></div><p class="panel-description">Add an image, type, a shape or a paint layer to begin.</p><button class="button primary" data-action="place">${icon("image")}Place image</button><div class="property-divider"></div><div class="control-grid">${numberField("W", "doc.width", doc()?.width || 1800)}${numberField("H", "doc.height", doc()?.height || 1200)}</div>`;
-    if(l?.type==="text"){root.insertAdjacentHTML("beforeend",`<button class="button type-open" data-action="type-studio">Type Studio · định dạng từng đoạn</button><div class="property-small-heading">PARAGRAPH & METRICS</div><div class="control-grid">${[["startIndent","Lề trái",0],["endIndent","Lề phải",0],["firstLineIndent","Dòng đầu",0],["spaceBefore","Trước đoạn",0],["spaceAfter","Sau đoạn",0],["baselineShift","Baseline",0],["horizontalScale","Ngang %",100],["verticalScale","Dọc %",100],["kerning","Kerning",0]].map(([k,n,v])=>numberField(n,k,l[k]??v,k.includes("Scale")?"%":"px")).join("")}</div><label>Canh đoạn<select data-property="align">${["left","center","right","justify"].map(v=>`<option ${v===l.align?"selected":""}>${v}</option>`).join("")}</select></label>`);}
+
   bindProperties(root);
     return;
   }
@@ -307,8 +325,8 @@ function renderProperties() {
   } else {
     html += `<details class="transform-details" ${l.type === "text" ? "" : "open"}><summary>TRANSFORM & ALIGN</summary><label class="aspect-control"><input type="checkbox" data-property="aspectLocked" ${l.aspectLocked?"checked":""}> ${icon("clip")} Khóa tỉ lệ W / H</label><div class="control-grid">${numberField("X", "x", l.x)}${numberField("Y", "y", l.y)}${numberField("W", "width", l.width)}${numberField("H", "height", l.height)}</div><div class="control-grid">${numberField("↻", "rotation", l.rotation, "°")}<button class="button" data-action="center-layer">Center layer</button></div>`;
     html += `<div class="align-layer-grid">${[["left", "Left"], ["center-x", "Center X"], ["right", "Right"], ["top", "Top"], ["center-y", "Center Y"], ["bottom", "Bottom"]].map(([id, name]) => `<button data-layer-align="${id}" title="Align to canvas ${name}">${name}</button>`).join("")}</div><div class="property-transform-actions"><button data-action="flip-x">Flip horizontal</button><button data-action="flip-y">Flip vertical</button></div></details>`;
-    if (l.type === "text") html += `<div class="property-divider"></div><div class="property-small-heading">CHARACTER</div><textarea class="text-content" data-property="text" aria-label="Text content">${esc(l.text)}</textarea><div class="font-row"><select data-property="font" aria-label="Font family">${["Inter", "Arial", "Georgia", "Courier New", "Verdana", "Trebuchet MS", "Times New Roman", ...(doc().fonts || []).map((f) => f.family)].map((f) => `<option ${f === l.font ? "selected" : ""}>${esc(doc().fonts?.find((font) => font.family === f)?.name || f)}</option>`).join("")}</select><select data-property="fontWeight" aria-label="Font weight">${[[400, "Regular"], [500, "Medium"], [600, "Semibold"], [700, "Bold"], [800, "Extra bold"]].map(([w, n]) => `<option value="${w}" ${w === l.fontWeight ? "selected" : ""}>${n}</option>`).join("")}</select></div><div class="control-grid">${numberField("Size", "fontSize", l.fontSize, "px")}<label class="number-field"><span>Leading</span><input type="number" data-property="lineHeight" min=".8" max="3" step=".1" value="${l.lineHeight || 1.2}" aria-label="Line height"></label></div><div class="align-controls">${["left", "center", "right"].map((a) => `<button class="${a === l.align ? "active" : ""}" data-align="${a}" title="Align ${a}" aria-label="Align ${a}">${icon("align-" + a)}</button>`).join("")}</div><div class="property-row fill-row"><span>Color</span><input type="color" data-property="color" value="${esc(l.color)}" aria-label="Text color"><code>${esc(l.color.toUpperCase())}</code><label><input type="checkbox" data-property="italic" ${l.italic ? "checked" : ""}> Italic</label></div>`;
-    if (l.type === "shape") html += `<div class="property-divider"></div><div class="property-row"><span>Shape</span><select data-property="shape" aria-label="Shape">${["rect", "ellipse", "triangle", "star", "line"].map((s) => `<option value="${s}" ${s === l.shape ? "selected" : ""}>${titleCase(s)}</option>`).join("")}</select></div><div class="fill-row"><span>Fill</span><input type="color" data-property="color" value="${esc(l.color)}" aria-label="Shape fill"><code>${esc(l.color.toUpperCase())}</code><label><input type="checkbox" data-property="gradient" ${l.gradient ? "checked" : ""}> Gradient</label></div>${l.gradient ? `<div class="fill-row" style="margin-top:10px"><span>End color</span><input type="color" data-property="color2" value="${esc(l.color2 || "#235b66")}" aria-label="Gradient end color"></div>` : ""}${l.shape === "rect" ? rangeControl("Corner radius", "radius", l.radius || 0, 0, 120, 1, "px") : ""}`;
+    if (l.type === "text") html += `<div class="property-divider"></div><div class="property-small-heading">CHARACTER</div><textarea class="text-content" data-property="text" aria-label="Text content">${esc(l.text)}</textarea><div class="font-row"><select data-property="font" aria-label="Font family">${fontFamilies(doc(),l.font).map((f) => `<option value="${esc(f)}" ${f === l.font ? "selected" : ""}>${esc(doc().fonts?.find((font) => font.family === f)?.name || f)}</option>`).join("")}</select><select data-property="fontWeight" aria-label="Font weight">${[[400, "Regular"], [500, "Medium"], [600, "Semibold"], [700, "Bold"], [800, "Extra bold"]].map(([w, n]) => `<option value="${w}" ${w === l.fontWeight ? "selected" : ""}>${n}</option>`).join("")}</select></div><div class="font-tools"><input id="font-filter" type="search" placeholder="Search installed fonts" aria-label="Search fonts"><small id="font-count">${fontCatalogStatus().count} fonts · ${fontCatalogStatus().source}</small><button type="button" class="button" id="system-font-refresh">Load / refresh system fonts</button></div><div class="control-grid">${numberField("Size", "fontSize", l.fontSize, "px")}<label class="number-field"><span>Leading</span><input type="number" data-property="lineHeight" min=".8" max="3" step=".1" value="${l.lineHeight || 1.2}" aria-label="Line height"></label></div><div class="align-controls">${["left", "center", "right"].map((a) => `<button class="${a === l.align ? "active" : ""}" data-align="${a}" title="Align ${a}" aria-label="Align ${a}">${icon("align-" + a)}</button>`).join("")}</div><div class="property-row fill-row"><span>Color</span><input type="color" data-property="color" value="${esc(l.color)}" aria-label="Text color"><code>${esc(l.color.toUpperCase())}</code><label><input type="checkbox" data-property="italic" ${l.italic ? "checked" : ""}> Italic</label></div>`;
+    if (l.type === "shape") html += `<div class="property-divider"></div><div class="property-row"><span>Shape</span><select data-property="shape" aria-label="Shape">${["rect", "ellipse", "triangle", "star", "line",...(l.shape==="path"?["path"]:[])].map((s) => `<option value="${s}" ${s === l.shape ? "selected" : ""}>${titleCase(s)}</option>`).join("")}</select></div><div class="fill-row"><span>Fill</span><input type="color" data-property="color" value="${esc(l.color)}" aria-label="Shape fill"><code>${esc(l.color.toUpperCase())}</code><label><input type="checkbox" data-property="gradient" ${l.gradient ? "checked" : ""}> Gradient</label></div>${l.gradient ? `<div class="fill-row" style="margin-top:10px"><span>End color</span><input type="color" data-property="color2" value="${esc(l.color2 || "#235b66")}" aria-label="Gradient end color"></div>` : ""}${l.shape === "rect" ? rangeControl("Corner radius", "radius", l.radius || 0, 0, 120, 1, "px") : ""}`;
     html += `<label class="check-row"><input type="checkbox" data-property="locked" ${l.locked ? "checked" : ""}> Lock layer <button data-action="styles">Layer styles ${icon("chevron-right")}</button></label>`;
   }
   if(l.smartObjectId)html+=advanced?.extras(l)||'';
@@ -335,10 +353,13 @@ function writePath(o, path, value) {
   v[last] = value;
 }
 function bindProperties(root) {
+  const fontFilter=root.querySelector('#font-filter'),refresh=root.querySelector('#system-font-refresh');
+  if(fontFilter)fontFilter.oninput=()=>{const query=fontFilter.value.trim().toLocaleLowerCase(),select=root.querySelector('[data-property="font"]'),l=layer();select.innerHTML=fontFamilies(doc(),l?.font).filter(f=>!query||f.toLocaleLowerCase().includes(query)).map(f=>`<option value="${esc(f)}" ${f===l?.font?'selected':''}>${esc(doc().fonts?.find(v=>v.family===f)?.name||f)}</option>`).join('');};
+  if(refresh)refresh.onclick=async()=>{refresh.disabled=true;try{const status=await loadSystemFonts({request:true,refresh:true});if(status.error)toast(status.error,true);renderProperties();}finally{refresh.disabled=false;}};
   $$("[data-property]", root).forEach((input) => {
     input.oninput = () => {
       if (!current) return;
-      let l = layer(), key = input.dataset.property, value = input.type === "checkbox" ? input.checked : input.type === "range" || input.type === "number" ? Number(input.value) : input.value;
+      let l = layer();if(l)beginPreviewEdit(l.id);let key = input.dataset.property, value = input.type === "checkbox" ? input.checked : input.type === "range" || input.type === "number" ? Number(input.value) : input.value;
       if (key === "fontWeight") value = Number(value);
       if ((input.type === "range" || input.type === "number" || key === "fontWeight") && !Number.isFinite(value)) return;
       if (key === "width" || key === "height") {
@@ -566,11 +587,14 @@ function requestRender() {
 }
 function render() {
   if (!current) return;
-  renderScale = Math.min(1, 1600 / Math.max(doc().width, doc().height));
-  composite = renderDocument(pro?.previewDocument(doc()) || doc(), assets, { scale: renderScale });
+  const started=performance.now(),interactive=pointerBusy||!!gesture||!!pro?.isDrawing()||!!previewEditId;
+  const mutableIds=gesture?.layer?[gesture.layer.id]:pro?.mutableIds()?.length?pro.mutableIds():previewEditId?[previewEditId]:interactive?[doc().activeId]:[];
+  renderScale = Math.min(1, (interactive?1200:1600) / Math.max(doc().width, doc().height));
+  composite = renderDocument(pro?.previewDocument(doc()) || doc(), assets, { scale: renderScale,preview:{mutableIds} });
   const c = $("#image-canvas");
-  c.width = composite.width;
-  c.height = composite.height;
+  if(c.width!==composite.width)c.width=composite.width;
+  if(c.height!==composite.height)c.height=composite.height;
+  c.getContext("2d").clearRect(0,0,c.width,c.height);
   c.getContext("2d").drawImage(composite, 0, 0);
   advanced?.proofCanvas(c,composite);
   if (pro && pro.view() !== "composite") {
@@ -582,10 +606,7 @@ function render() {
     }
     x.putImageData(data, 0, 0);
   }
-  stats = histogram(composite.getContext("2d").getImageData(0, 0, composite.width, composite.height).data);
-  drawCurve();
-  drawHistogram();
-  desktop?.onRendered(composite);
+  if(!interactive){stats=histogram(composite.getContext('2d').getImageData(0,0,composite.width,composite.height).data);drawCurve();drawHistogram();desktop?.onRendered(composite);}
   documentTools?.preview(c);
   const n = $("#navigator"), nx = n.getContext("2d");
   n.width = 206;
@@ -594,6 +615,7 @@ function render() {
   const s = Math.min(206 / composite.width, 130 / composite.height);
   nx.drawImage(composite, (206 - composite.width * s) / 2, (130 - composite.height * s) / 2, composite.width * s, composite.height * s);
   positionBoard();
+  performanceStats.renders++;performanceStats.lastRenderMs=performance.now()-started;performanceStats.maxRenderMs=Math.max(performanceStats.maxRenderMs,performanceStats.lastRenderMs);
 }
 function drawRulers() {
   if (!current) return;
@@ -638,12 +660,12 @@ function drawRulers() {
     }
   }
 }
-function outlineSelection(ctx, s) {
+function outlineSelection(ctx, s, open=false) {
   ctx.beginPath();
   if (s.type === "ellipse") ctx.ellipse(s.x + s.width / 2, s.y + s.height / 2, Math.abs(s.width / 2), Math.abs(s.height / 2), 0, 0, Math.PI * 2);
   else if (s.type === "polygon") {
     s.points.forEach((p, i) => i ? ctx.lineTo(...p) : ctx.moveTo(...p));
-    ctx.closePath();
+    if(!open)ctx.closePath();
   } else if (s.type === "paint") ctx.rect(0, 0, doc().width, doc().height);
   else ctx.rect(s.x, s.y, s.width, s.height);
   ctx.stroke();
@@ -651,10 +673,8 @@ function outlineSelection(ctx, s) {
 function renderOverlay() {
   if (!current) return;
   const c = $("#overlay"), s = Math.min(1, 1800 / Math.max(doc().width, doc().height));
-  c.width = Math.round(doc().width * s);
-  c.height = Math.round(doc().height * s);
-  const x = c.getContext("2d");
-  x.scale(s, s);
+  const w=Math.round(doc().width*s),h=Math.round(doc().height*s);if(c.width!==w)c.width=w;if(c.height!==h)c.height=h;
+  const x=c.getContext('2d');x.setTransform(1,0,0,1,0,0);x.clearRect(0,0,c.width,c.height);x.scale(s,s);performanceStats.overlays++;
   const l = layer(), z = current.zoom;
   if (grid) {
     x.strokeStyle = "#80d7bc30";
@@ -688,7 +708,7 @@ function renderOverlay() {
     }
     x.restore();
   }
-  const selection = doc().selection;
+  const selection = tool==="crop"?current.crop:gesture?.kind==="selection"?gesture.draftSelection:doc().selection;
   if (selection) {
     if (tool === "crop" && selection.type === "rect") {
       x.fillStyle = "#0008";
@@ -700,11 +720,15 @@ function renderOverlay() {
     x.lineWidth = 1.5 / z;
     x.strokeStyle = "#102b23";
     x.setLineDash([]);
-    outlineSelection(x, selection);
+    outlineSelection(x, selection,gesture?.kind==="selection"&&selection.type==="polygon");
     x.strokeStyle = "#e6f4ef";
     x.setLineDash([5 / z, 5 / z]);
-    outlineSelection(x, selection);
+    outlineSelection(x, selection,gesture?.kind==="selection"&&selection.type==="polygon");
     x.setLineDash([]);
+    if(tool==='crop'&&selection.type==='rect'){
+      x.strokeStyle='#ffffff70';for(const n of [1,2]){x.beginPath();x.moveTo(selection.x+selection.width*n/3,selection.y);x.lineTo(selection.x+selection.width*n/3,selection.y+selection.height);x.moveTo(selection.x,selection.y+selection.height*n/3);x.lineTo(selection.x+selection.width,selection.y+selection.height*n/3);x.stroke();}
+      x.fillStyle='#fff';x.font=`${12/z}px Inter,sans-serif`;x.fillText(`${Math.round(selection.width)} × ${Math.round(selection.height)} px`,selection.x+8/z,selection.y+20/z);
+    }
   }
   if (maskMode && l?.mask && l.mask.type !== "paint") {
     x.strokeStyle = "#a5e3bb";
@@ -713,14 +737,15 @@ function renderOverlay() {
     outlineSelection(x, l.mask);
     x.setLineDash([]);
   }
-  if (hover && ["brush", "eraser"].includes(tool)) {
+  if (hover && ["brush", "eraser","clone","heal","dodge","burn"].includes(tool)) {
+    const diameter=["brush","eraser"].includes(tool)?brushSize:pro?.brushSize()||40;
     x.beginPath();
-    x.arc(hover.x, hover.y, brushSize / 2, 0, Math.PI * 2);
+    x.arc(hover.x, hover.y, diameter / 2, 0, Math.PI * 2);
     x.strokeStyle = "#fff";
     x.lineWidth = 1 / z;
     x.stroke();
     x.beginPath();
-    x.arc(hover.x, hover.y, Math.max(0, brushSize / 2 - 1 / z), 0, Math.PI * 2);
+    x.arc(hover.x, hover.y, Math.max(0, diameter / 2 - 1 / z), 0, Math.PI * 2);
     x.strokeStyle = "#222";
     x.stroke();
   }
@@ -871,12 +896,12 @@ function moveStack(direction) {
   }
 }
 function applyCrop() {
-  const s = doc().selection;
+  const draft=current.crop,s=draft?{...draft,x:Math.round(draft.x),y:Math.round(draft.y),width:Math.round(draft.width),height:Math.round(draft.height)}:null;
   if (!s || s.type !== "rect" || s.width < 2 || s.height < 2) {
     toast("Drag a rectangular crop area first.");
     return;
   }
-  cropDocument(doc(), s);
+  cropDocument(doc(), s);current.crop=null;
   commit("Crop document");
   fit();
   setTool("move");
@@ -890,131 +915,63 @@ function flatten() {
   doc().selectedIds = [l.id];
   commit("Flatten visible layers");
 }
-async function paintStart(e, p) {
-  let l = layer();
-  if (l?.smartObjectId && !maskMode) { toast('Smart Object: dùng Sửa nội dung hoặc Rasterize trước khi tô pixel.',true); return false; }
-  if(l&&!canEdit(doc(),l,maskMode?"mask":tool==="eraser"?"erase":"pixels")){
-    toast("Unlock the layer before painting.", true);
-    return false;
+function paintStart(e,p){
+ let l=layer(),g=gesture;
+ if(l?.smartObjectId&&!maskMode){toast('Edit Smart Object contents or rasterize before painting.',true);return false;}
+ if(l&&!canEdit(doc(),l,maskMode?'mask':tool==='eraser'?'erase':'pixels')){toast('Unlock the layer before painting.',true);return false;}
+ g.previousActive=doc().activeId;g.previousSelected=clone(doc().selectedIds||[]);g.mask=maskMode;
+ if(maskMode){
+  if(!l)return false;g.oldMask=l.mask?clone(l.mask):null;
+  const c=canvas(doc().width,doc().height);
+  if(l.mask)c.getContext('2d').drawImage(maskCanvas(doc(),{...l.mask,density:100},1,assets),0,0);
+  else {c.getContext('2d').fillStyle='#fff';c.getContext('2d').fillRect(0,0,c.width,c.height);}
+  g.paint=c;g.layer=l;l.mask={type:'paint',source:'working-mask-'+l.id,x:0,y:0,width:doc().width,height:doc().height,feather:0,invert:false,linked:g.oldMask?.linked!==false,disabled:!!g.oldMask?.disabled,density:g.oldMask?.density??100};assets.set(l.mask.source,c);
+ }else{
+  if(!l||!['paint','image'].includes(l.type)||tool==='brush'&&l.type!=='paint'&&!lockState(doc(),l).transparency){
+   if(tool==='eraser'&&l){toast('Use Eraser on a pixel layer or a mask.',true);return false;}
+   if(doc().layers.length>=150){toast('Project layer limit reached.',true);return false;}
+   const parent=l?.parentId||null,index=doc().layers.indexOf(l),c=canvas(doc().width,doc().height),source=c.toDataURL();
+   l=createLayer('paint',{name:'Paint layer',parentId:parent,source,width:doc().width,height:doc().height});assets.set(source,c);doc().layers.splice(index<0?doc().layers.length:index+1,0,l);doc().activeId=l.id;doc().selectedIds=[l.id];g.created=true;
   }
-  if (maskMode) {
-    if (!l?.mask) {
-      addMask();
-      l = layer();
-    }
-    const c = maskCanvas(doc(), {...l.mask,density:100}, 1, assets);
-    gesture.paint = c;
-    gesture.layer = l;
-    gesture.oldMask = clone(l.mask);
-    gesture.oldSource = null;
-    l.mask = { type: "paint", source: `working-mask-${l.id}`, x: 0, y: 0, width: doc().width, height: doc().height, feather: 0, invert: false,linked:gesture.oldMask.linked!==false,disabled:!!gesture.oldMask.disabled,density:gesture.oldMask.density??100 };
-    assets.set(l.mask.source, c);
-  } else {
-    if (!l || !["paint", "image"].includes(l.type) || tool === "brush" && l.type !== "paint" && !lockState(doc(),l).transparency) {
-      if (tool === "eraser" && l) {
-        toast("Use Eraser on a pixel layer or a mask.", true);
-        return false;
-      }
-      l = addPaint();
-      if (!l) return false;
-    }
-    const c = canvas(l.width, l.height), image = assets.get(l.source);
-    if (image) c.getContext("2d").drawImage(image, 0, 0, l.width, l.height);
-    gesture.paint = c;
-    gesture.layer = l;
-    gesture.oldSource = l.source;
-    l.source = `working-paint-${l.id}`;
-    assets.set(l.source, c);
-  }
-  gesture.mask = maskMode;
-  gesture.last = p;
-  paintSegment(e, p, p);
-  return true;
+  const c=canvas(l.width,l.height),image=assets.get(l.source);if(image)c.getContext('2d').drawImage(image,0,0,l.width,l.height);
+  g.paint=c;g.layer=l;g.oldSource=l.source;l.source='working-paint-'+l.id;assets.set(l.source,c);
+ }
+ if(doc().selection){
+  const selected=maskCanvas(doc(),doc().selection,1,assets),mask=canvas(g.paint.width,g.paint.height),x=mask.getContext('2d');
+  if(!g.mask){x.translate(l.width/2,l.height/2);x.scale(l.flipX?-1:1,l.flipY?-1:1);x.rotate(-(l.rotation||0)*Math.PI/180);x.translate(-l.x-l.width/2,-l.y-l.height/2);}
+  x.drawImage(selected,0,0);selected.width=selected.height=1;g.selectionMask=mask;
+ }
+ g.scratch=canvas(1,1);g.last=p;paintSegment(e,p,p);return true;
 }
-function paintSegment(e, a, b) {
-  if (!gesture?.paint) return;
-  const l = gesture.layer, c = gesture.paint, x = c.getContext("2d");
-  let A = a, B = b;
-  if (!gesture.mask) {
-    A = localPoint(l, a.x, a.y);
-    B = localPoint(l, b.x, b.y);
-    if (l.flipX) {
-      A.x = l.width - A.x;
-      B.x = l.width - B.x;
-    }
-    if (l.flipY) {
-      A.y = l.height - A.y;
-      B.y = l.height - B.y;
-    }
-  }
-  const pressure = e.pointerType === "pen" ? Math.max(0.15, e.pressure || 0.5) : 1;
-  x.save();
-  x.globalAlpha = brushOpacity / 100;
-  x.globalCompositeOperation = tool === "eraser" ? "destination-out" : !gesture.mask&&lockState(doc(),l).transparency?"source-atop":"source-over";
-  x.strokeStyle = gesture.mask ? "#ffffff" : foreground;
-  x.fillStyle = x.strokeStyle;
-  x.lineWidth = Math.max(1, brushSize * pressure);
-  x.lineCap = "round";
-  x.lineJoin = "round";
-  if (!gesture.mask && doc().selection) {
-    const clipped = maskCanvas(doc(), doc().selection, 1, assets);
-    const stroke = canvas(c.width, c.height), cx = stroke.getContext("2d");
-    cx.globalAlpha = brushOpacity / 100;
-    cx.strokeStyle = foreground;
-    cx.fillStyle = foreground;
-    cx.lineWidth = x.lineWidth;
-    cx.lineCap = "round";
-    cx.beginPath();
-    cx.moveTo(A.x, A.y);
-    cx.lineTo(B.x, B.y);
-    cx.stroke();
-    cx.beginPath();
-    cx.arc(B.x, B.y, x.lineWidth / 2, 0, Math.PI * 2);
-    cx.fill();
-    cx.globalCompositeOperation = "destination-in";
-    cx.save();
-    cx.translate(l.width / 2, l.height / 2);
-    cx.scale(l.flipX ? -1 : 1, l.flipY ? -1 : 1);
-    cx.rotate(-(l.rotation || 0) * Math.PI / 180);
-    cx.translate(-l.x - l.width / 2, -l.y - l.height / 2);
-    cx.drawImage(clipped, 0, 0);
-    cx.restore();
-    x.globalAlpha = 1;
-    x.drawImage(stroke, 0, 0);
-  } else {
-    x.beginPath();
-    x.moveTo(A.x, A.y);
-    x.lineTo(B.x, B.y);
-    x.stroke();
-    if (Math.hypot(A.x - B.x, A.y - B.y) < 0.1) {
-      x.beginPath();
-      x.arc(B.x, B.y, x.lineWidth / 2, 0, Math.PI * 2);
-      x.fill();
-    }
-  }
-  x.restore();
-  requestRender();
+function paintSegment(e,a,b){
+ const g=gesture;if(!g?.paint)return;
+ const l=g.layer,c=g.paint,x=c.getContext('2d');let A=a,B=b;
+ if(!g.mask){A=localPoint(l,a.x,a.y);B=localPoint(l,b.x,b.y);if(l.flipX){A.x=l.width-A.x;B.x=l.width-B.x;}if(l.flipY){A.y=l.height-A.y;B.y=l.height-B.y;}}
+ const pressure=e.pointerType==='pen'?Math.max(.15,e.pressure||.5):1,diameter=Math.max(1,brushSize*pressure),r=diameter/2;
+ const left=Math.max(0,Math.floor(Math.min(A.x,B.x)-r-2)),top=Math.max(0,Math.floor(Math.min(A.y,B.y)-r-2)),right=Math.min(c.width,Math.ceil(Math.max(A.x,B.x)+r+2)),bottom=Math.min(c.height,Math.ceil(Math.max(A.y,B.y)+r+2));
+ if(right<=left||bottom<=top)return;
+ const scratch=g.scratch,w=right-left,h=bottom-top;if(scratch.width!==w)scratch.width=w;if(scratch.height!==h)scratch.height=h;
+ const cx=scratch.getContext('2d');cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,w,h);cx.globalCompositeOperation='source-over';cx.globalAlpha=1;
+ const fill=g.mask?'#ffffff':foreground;
+ if(brushHardness===100){cx.strokeStyle=cx.fillStyle=fill;cx.lineWidth=diameter;cx.lineCap=cx.lineJoin='round';cx.beginPath();cx.moveTo(A.x-left,A.y-top);cx.lineTo(B.x-left,B.y-top);cx.stroke();cx.beginPath();cx.arc(B.x-left,B.y-top,r,0,Math.PI*2);cx.fill();}
+ else{
+  const key=[diameter,brushHardness,fill].join(':');if(g.tipKey!==key){if(g.tip)g.tip.width=g.tip.height=1;const size=Math.ceil(diameter+4);g.tip=canvas(size,size);g.tipKey=key;const tx=g.tip.getContext('2d'),center=size/2,gradient=tx.createRadialGradient(center,center,r*brushHardness/100,center,center,r);gradient.addColorStop(0,fill);gradient.addColorStop(1,fill+'00');tx.fillStyle=gradient;tx.fillRect(0,0,size,size);}
+  const steps=Math.max(1,Math.ceil(Math.hypot(B.x-A.x,B.y-A.y)/Math.max(1,diameter*.12)));for(let i=0;i<=steps;i++)cx.drawImage(g.tip,A.x+(B.x-A.x)*i/steps-left-g.tip.width/2,A.y+(B.y-A.y)*i/steps-top-g.tip.height/2);
+ }
+ if(g.selectionMask){cx.globalCompositeOperation='destination-in';cx.drawImage(g.selectionMask,-left,-top);cx.globalCompositeOperation='source-over';}
+ x.save();x.globalAlpha=brushOpacity/100;x.globalCompositeOperation=tool==='eraser'?'destination-out':!g.mask&&lockState(doc(),l).transparency?'source-atop':'source-over';x.drawImage(scratch,left,top);x.restore();
+ assets.touch(g.mask?l.mask.source:l.source);performanceStats.paintSegments++;requestRender();
 }
-function paintEnd() {
-  const g = gesture;
-  if (!g?.paint) return;
-  const source = g.paint.toDataURL("image/png");
-  assets.set(source, g.paint);
-  if (g.mask) {
-    assets.map.delete(g.layer.mask.source);
-    g.layer.mask.source = source;
-  } else {
-    assets.map.delete(g.layer.source);
-    g.layer.source = source;
-    delete g.layer.photoRecipe;
-    delete g.layer.removalRecipe;
-    delete g.layer.productRecipe;
-    delete g.layer.cutoutRecipe; delete g.layer.paperRecipe; delete g.layer.colorRecipe; delete g.layer.landscapeRecipe; delete g.layer.sceneRecipe; delete g.layer.artRecipe;
-  }
-  commit(g.mask ? "Paint mask" : tool === "eraser" ? "Erase" : "Brush stroke");
+function releaseBrushBuffers(g){for(const c of [g.scratch,g.tip,g.selectionMask])if(c)c.width=c.height=1;}
+function paintEnd(){
+ const g=gesture;if(!g?.paint)return;const source=g.paint.toDataURL('image/png');assets.set(source,g.paint);
+ if(g.mask){assets.map.delete(g.layer.mask.source);g.layer.mask.source=source;}
+ else{assets.map.delete(g.layer.source);g.layer.source=source;for(const k of ['photoRecipe','removalRecipe','productRecipe','cutoutRecipe','paperRecipe','colorRecipe','landscapeRecipe','sceneRecipe','artRecipe'])delete g.layer[k];}
+ releaseBrushBuffers(g);commit(g.mask?'Paint mask':tool==='eraser'?'Erase':'Brush stroke');
 }
 function cancelGesture() {
-  if (pro?.cancel()) return;
+  pointerBusy=false;updateToolCursor();
+  if(pro?.cancel()){updateToolCursor();return;}
   if (!gesture) return;
   const g = gesture;
   if (g.paint) {
@@ -1024,13 +981,16 @@ function cancelGesture() {
     } else {
       assets.map.delete(g.layer.source);
       g.layer.source = g.oldSource;
+      if(g.created){doc().layers=doc().layers.filter(l=>l.id!==g.layer.id);doc().activeId=g.previousActive;doc().selectedIds=g.previousSelected;}
     }
+    releaseBrushBuffers(g);g.paint.width=g.paint.height=1;
   } else if (g.originals) for (const original of g.originals) {
     const target = doc().layers.find((x) => x.id === original.id);
     if (target) Object.assign(target, original);
   }
   else if (g.original && g.layer) Object.assign(g.layer, g.original);
   else if (g.kind === "selection") doc().selection = g.oldSelection;
+  else if(g.kind==="crop")current.crop=g.oldCrop;
   gesture = null;
   $("#stage").classList.remove("dragging");
   renderUI();
@@ -1044,7 +1004,7 @@ $("#stage").addEventListener("pointerdown", (e) => {
   }
   if (e.button === 2) return;
   e.preventDefault();
-  closeMenu();
+  closeMenu();pointerBusy=true;updateToolCursor(e);
   const p = pointOnCanvas(e), sp = stagePoint(e);
   gesture = { start: p, startScreen: sp, last: p, pointerId: e.pointerId };
   $("#stage").setPointerCapture(e.pointerId);
@@ -1053,11 +1013,11 @@ $("#stage").addEventListener("pointerdown", (e) => {
     gesture.panX = current.panX;
     gesture.panY = current.panY;
     current.fitted = false;
-    $("#stage").classList.add("dragging");
+    $("#stage").classList.add("dragging");updateToolCursor(e);
     return;
   }
   if (p.x < 0 || p.y < 0 || p.x > doc().width || p.y > doc().height) {
-    gesture = null;
+    gesture = null;pointerBusy=false;updateToolCursor(e);
     return;
   }
   if(documentTools?.pointerDown(e,p)){gesture=null;return;}
@@ -1104,17 +1064,19 @@ $("#stage").addEventListener("pointerdown", (e) => {
     gesture.original = clone(l);
     gesture.rootIds = roots(doc()).map((x) => x.id);
     gesture.originals = roots(doc()).flatMap((x) => subtree(doc(), x.id)).map((x) => clone(x));
-  } else if (["select", "ellipse", "lasso", "crop"].includes(tool)) {
-    gesture.kind = "selection";
-    gesture.oldSelection = clone(doc().selection);
-    gesture.selectionMode = tool === "crop" ? "replace" : selectionMode;
-    doc().selection = tool === "lasso" ? { type: "polygon", points: [[p.x, p.y]], feather: 0, invert: false } : { type: tool === "ellipse" ? "ellipse" : "rect", x: p.x, y: p.y, width: 0, height: 0, feather: 0, invert: false };
-    renderOverlay();
-  } else if (["brush", "eraser"].includes(tool)) {
-    gesture.kind = "paint";
-    paintStart(e, p).then((ok) => {
-      if (!ok) gesture = null;
-    });
+  } else if(tool==='crop'){
+    gesture.kind='crop';gesture.oldCrop=current.crop?clone(current.crop):null;
+    const c=current.crop,corners=c?[[c.x,c.y],[c.x+c.width,c.y],[c.x+c.width,c.y+c.height],[c.x,c.y+c.height]]:[],corner=corners.findIndex(([x,y])=>Math.hypot(p.x-x,p.y-y)*current.zoom<10);
+    if(corner>=0)gesture.cropAnchor={x:corners[(corner+2)%4][0],y:corners[(corner+2)%4][1]};
+    else if(c&&p.x>c.x&&p.x<c.x+c.width&&p.y>c.y&&p.y<c.y+c.height)gesture.cropMove=true;
+    else{current.crop={type:'rect',...cropRect(p,p,doc(),cropRatio(cropAspect,doc()))};gesture.cropAnchor=p;}
+    requestOverlay();
+  } else if (["select","ellipse","lasso"].includes(tool)){
+    gesture.kind='selection';gesture.oldSelection=clone(doc().selection);gesture.selectionMode=selectionMode;
+    gesture.draftSelection=tool==='lasso'?{type:'polygon',points:[[p.x,p.y]],feather:0,invert:false}:{type:tool==='ellipse'?'ellipse':'rect',x:p.x,y:p.y,width:0,height:0,feather:0,invert:false};
+    requestOverlay();
+  } else if (["brush","eraser"].includes(tool)){
+    gesture.kind='paint';if(!paintStart(e,p)){gesture=null;pointerBusy=false;updateToolCursor(e);}
   } else if (tool === "text") {
     const hit = hitLayer(doc(), p.x, p.y);
     if (hit?.type === "text") {
@@ -1144,13 +1106,12 @@ $("#stage").addEventListener("pointerdown", (e) => {
 });
 $("#stage").addEventListener("pointermove", (e) => {
   if (!current) return;
-  const p = pointOnCanvas(e);
+  const p = pointOnCanvas(e);hover=p;updateToolCursor(e);
   if(documentTools?.pointerMove(e,p))return;
   if (pro?.pointerMove(e, p)) return;
-  hover = p;
   const g = gesture;
   if (!g) {
-    renderOverlay();
+    if(["brush","eraser","clone","heal","dodge","burn"].includes(tool))requestOverlay();
     return;
   }
   if (g.pointerId !== e.pointerId) return;
@@ -1191,17 +1152,16 @@ $("#stage").addEventListener("pointermove", (e) => {
     const dx = (left + right) / 2 - o.width / 2, dy = (top + bottom) / 2 - o.height / 2, a = o.rotation * Math.PI / 180, cx = o.x + o.width / 2 + dx * Math.cos(a) - dy * Math.sin(a), cy = o.y + o.height / 2 + dx * Math.sin(a) + dy * Math.cos(a);
     Object.assign(g.layer, { x: cx - w / 2, y: cy - h / 2, width: w, height: h });
     requestRender();
+  } else if(g.kind==='crop'){
+    current.crop=g.cropMove?moveCrop(g.oldCrop,p.x-g.start.x,p.y-g.start.y,doc()):{type:'rect',...cropRect(g.cropAnchor||g.start,p,doc(),cropRatio(cropAspect,doc()))};requestOverlay();
   } else if (g.kind === "selection" || g.kind === "shape") {
     const q = { x: clamp(p.x, 0, doc().width), y: clamp(p.y, 0, doc().height) };
-    if (doc().selection.type === "polygon") {
-      if (Math.hypot(q.x - g.last.x, q.y - g.last.y) > 3 / current.zoom) {
-        doc().selection.points.push([q.x, q.y]);
-        g.last = q;
-      }
-    } else Object.assign(doc().selection, normalizedRect(g.start, q, e.shiftKey));
-    renderOverlay();
+    const s=g.kind==='selection'?g.draftSelection:doc().selection;
+    if(s.type==='polygon'){if(Math.hypot(q.x-g.last.x,q.y-g.last.y)>3/current.zoom){s.points.push([q.x,q.y]);g.last=q;}}
+    else Object.assign(s,normalizedRect(g.start,q,e.shiftKey));
+    requestOverlay();
   } else if (g.kind === "paint") {
-    const events = e.getCoalescedEvents?.() || [e];
+    const coalesced=e.getCoalescedEvents?.(),events=coalesced?.length?coalesced:[e];
     for (const event of events) {
       const q = pointOnCanvas(event);
       paintSegment(event, g.last, q);
@@ -1210,8 +1170,9 @@ $("#stage").addEventListener("pointermove", (e) => {
   }
 });
 $("#stage").addEventListener("pointerup", (e) => {
-  if(documentTools?.pointerUp())return;
-  if (pro?.pointerUp()) return;
+  pointerBusy=false;
+  if(documentTools?.pointerUp()){updateToolCursor(e);requestRender();return;}
+  if (pro?.pointerUp(e,pointOnCanvas(e))){updateToolCursor(e);requestRender();return;}
   const g = gesture;
   if (!g || g.pointerId !== e.pointerId) return;
   try {
@@ -1220,7 +1181,8 @@ $("#stage").addEventListener("pointerup", (e) => {
       pro?.remapMasks([n], [A, B, B, D, nx - A * ox - B * oy, ny - B * ox - D * oy]);
     }
     if (g.kind === "move" || g.kind === "resize" || g.kind === "maskmove") commit(g.kind === "move" ? "Move layer" : "Transform layer");
-    else if (g.kind === "paint") paintEnd();
+    else if(g.kind==='paint'){const end=pointOnCanvas(e);if(Math.hypot(end.x-g.last.x,end.y-g.last.y)>.01)paintSegment(e,g.last,end);paintEnd();}
+    else if(g.kind==='crop'){if(current.crop&&(current.crop.width<1||current.crop.height<1))current.crop=null;renderContext();requestOverlay();}
     else if (g.kind === "shape") {
       const r = clone(doc().selection);
       doc().selection = g.oldSelection;
@@ -1228,17 +1190,16 @@ $("#stage").addEventListener("pointerup", (e) => {
         addShape(r, tool === "gradient");
         setTool("move");
       }
-    } else if (g.kind === "selection") {
-      const s = doc().selection;
-      if (s.type === "polygon" && s.points.length < 3 || s.type !== "polygon" && (s.width < 2 || s.height < 2)) doc().selection = null;
-      if (doc().selection) combineSelection(doc().selection, g.oldSelection, g.selectionMode || "replace");
-      renderOverlay();
-      if (tool !== "crop") commit("Set selection");
+    } else if(g.kind==='selection'){
+      const s=g.draftSelection,valid=s.type==='polygon'?s.points.length>=3:s.width>=2&&s.height>=2;
+      if(valid){combineSelection(s,g.oldSelection,g.selectionMode||'replace');commit('Set selection');}
+      else doc().selection=g.oldSelection;
+      requestOverlay();
     }
   } finally {
     gesture = null;
     pro?.clearSnap();
-    $("#stage").classList.remove("dragging");
+    $("#stage").classList.remove("dragging");updateToolCursor(e);requestRender();
   }
 });
 $("#stage").addEventListener("pointercancel", cancelGesture);
@@ -1889,6 +1850,9 @@ async function runAction(name) {
   if (!actions[name]) return;
   closeMenu();
   try {
+    if(['undo','redo'].includes(name)&&pro?.undoDraft(name==='redo'))return;
+    if(name==='undo'&&tool==='crop'&&current.crop&&!gesture){current.crop=null;renderContext();requestOverlay();return;}
+    if(name==='undo'&&(gesture||pro?.isDrawing())){cancelGesture();return;}
     if (gesture) cancelGesture();
     documentTools?.cancel();
     await actions[name]();
@@ -1921,7 +1885,8 @@ function closeMenu() {
 function commandsModal() {
   showModal("Tìm công cụ", "Gõ tiếng Việt có dấu, không dấu hoặc tên công cụ tiếng Anh.", `<input class="command-search" id="command-search" placeholder="Ví dụ: gọn mặt, xóa người, màu áo…" aria-label="Search commands"><div class="command-list" id="command-list"></div>`, [], () => {
     const renderList = (query) => {
-      const items = searchActions(actionItems,query);
+      const localized=actionItems.map(([id,label,...rest])=>[id,translate(label),...rest]),items=searchActions(localized,query),seen=new Set(items.map(v=>v[0]));
+      for(const item of searchActions(actionItems,query))if(!seen.has(item[0])){items.push(item);seen.add(item[0]);}
       $("#command-list").innerHTML = items.map((a) => `<button data-command-action="${a[0]}">${icon(a[2])}${a[1]}<kbd>${a[3]}</kbd></button>`).join("") || "<p>No matching action.</p>";
       $$("[data-command-action]").forEach((b) => b.onclick = () => {
         closeModal();
@@ -1992,6 +1957,7 @@ document.addEventListener("click", (e) => {
     renderLayers();
     return;
   }
+  if(b?.dataset.layerLock){const l=doc().layers.find(l=>l.id===b.dataset.layerLock);if(l&&!b.disabled){l.locked=!l.locked;commit((l.locked?'Lock ':'Unlock ')+l.name);}return;}
   if (b?.dataset.visibility) {
     const l = doc().layers.find((l2) => l2.id === b.dataset.visibility);
     l.visible = !l.visible;
@@ -2041,6 +2007,7 @@ document.addEventListener("click", (e) => {
   if (menuOpen && !e.target.closest("#menu-popover")) closeMenu();
 });
 $("#layer-list").addEventListener("dblclick", (e) => {
+  if(e.target.closest("button"))return;
   const row = e.target.closest("[data-layer]");
   if (row) {
     doc().activeId = row.dataset.layer;
@@ -2064,6 +2031,7 @@ document.addEventListener("contextmenu", (e) => {
 });
 let draggedLayer = null;
 $("#layer-list").addEventListener("dragstart", (e) => {
+  if(e.target.closest("button")){e.preventDefault();return;}
   const row = e.target.closest("[data-layer]");
   if (row) {
     draggedLayer = row.dataset.layer;
@@ -2106,7 +2074,7 @@ $("#blend-mode").onchange = (e) => {
   }
 };
 $("#layer-opacity").oninput = (e) => {
-  const l = layer();
+  const l = layer();if(l)beginPreviewEdit(l.id);
   if (l && canEdit(doc(),l,"geometry")) {
     for (const target of selected(doc())) if (!effectiveLocked(doc(), target)) target.opacity = clamp(Number(e.target.value) || 0, 0, 100) / 100;
     requestRender();
@@ -2123,6 +2091,7 @@ $("#navigator").onclick = (e) => {
   positionBoard();
 };
 function switchDocument(id) {
+  stopPreviewEdit();pointerBusy=false;
   documentTools?.cancel();
   advanced?.cancel();
   photoLab?.cancel();
@@ -2163,6 +2132,7 @@ async function closeDocument(id) {
   assets.prune(sessions.map((s2) => s2.doc));
 }
 document.addEventListener("keydown", (e) => {
+  updateToolCursor(e);
   const typing = e.target.closest("input,textarea,select,[contenteditable=true]"), command = e.ctrlKey || e.metaKey, key = e.key.toLowerCase();
   if(command&&key==="k"&&!$("#modal").open){e.preventDefault();runAction("commands");return;}
   if (command && key === "s" && !$("#modal").open) {
@@ -2179,8 +2149,10 @@ document.addEventListener("keydown", (e) => {
   }
   if (!current) return;
   if (pro?.key(e)) return;
+  if(key==='enter'&&tool==='crop'){e.preventDefault();applyCrop();return;}
   if (key === "escape") {
     e.preventDefault();
+    if(tool==='crop'&&current.crop&&!gesture){current.crop=null;renderContext();requestOverlay();return;}
     if(documentTools?.cancel())return;
     if (gesture) cancelGesture();
     else {
@@ -2222,8 +2194,9 @@ document.addEventListener("keydown", (e) => {
     }
   }
   if (e.code === "Space") {
+    if(e.target.closest("button,[role=button],[role=tab]"))return;
     e.preventDefault();
-    space = true;
+    space = true;updateToolCursor(e);
     $("#stage").classList.add("hand-active");
     return;
   }
@@ -2275,14 +2248,15 @@ document.addEventListener("keydown", (e) => {
   else if (t) setTool(t[0]);
 });
 document.addEventListener("keyup", (e) => {
+  updateToolCursor(e);
   if (e.code === "Space") {
-    space = false;
+    space = false;updateToolCursor(e);
     if (tool !== "hand") $("#stage").classList.remove("hand-active");
   }
 });
 window.addEventListener("blur", () => {
-  space = false;
-  if (gesture) cancelGesture();
+  space = false;pointerBusy=false;
+  if(gesture||pro?.isDrawing())cancelGesture();updateToolCursor();
 });
 document.addEventListener("paste", (e) => {
   if (e.target.closest("input,textarea,[contenteditable=true]")) return;
@@ -2293,6 +2267,7 @@ document.addEventListener("paste", (e) => {
   }
 });
 document.addEventListener("keydown", (e) => {
+  if(e.target.closest("button,input,select,textarea,[contenteditable=true]"))return;
   const row = e.target.closest("[data-layer],[data-document]");
   if (row && ["Enter", " "].includes(e.key)) {
     e.preventDefault();
@@ -2358,7 +2333,7 @@ async function bootstrap() {
     setDocument(createDocument(), "New canvas");
   }
 }
-pro = createProStudio({ doc, layer, assets, commit, addLayer, setTool, showModal, closeModal, requestRender, renderUI, toast, runAction, foreground: () => foreground, tool: () => tool, zoom: () => current?.zoom || 1, overlay: renderOverlay, openStudio: () => {
+pro = createProStudio({ doc, layer, assets, commit, addLayer, setTool, showModal, closeModal, requestRender, renderUI, toast, runAction, foreground: () => foreground, tool: () => tool, zoom: () => current?.zoom || 1, overlay: requestOverlay, openStudio: () => {
   activePanel = "studio";
   $("#app").classList.remove("dock-collapsed");
   renderProperties();
@@ -2457,30 +2432,38 @@ $("#layer-kind").onchange = (e) => {
   layerKind = e.target.value;
   renderLayers();
 };
-documentTools=createDocumentTools({doc,layer,assets,commit,addLayer,renderUI,requestRender,toast,setTool,showModal,closeModal,foreground:()=>foreground,tool:()=>tool,zoom:()=>current?.zoom||1,brushSize:()=>brushSize,brushOpacity:()=>brushOpacity,setChannel:v=>pro.setView(v),refreshPanels:renderUI,overlay:renderOverlay});
+documentTools=createDocumentTools({doc,layer,assets,commit,addLayer,renderUI,requestRender,toast,setTool,showModal,closeModal,foreground:()=>foreground,tool:()=>tool,zoom:()=>current?.zoom||1,brushSize:()=>brushSize,brushOpacity:()=>brushOpacity,setChannel:v=>pro.setView(v),refreshPanels:renderUI,overlay:requestOverlay});
 Object.assign(actions,documentTools.actions);actionItems.push(...documentTools.actionItems);
 actions["type-studio"]=()=>openTypeStudio({doc,layer,commit,showModal,closeModal,toast,requestRender,renderUI});actionItems.push(["type-studio","Type Studio · định dạng chữ theo vùng","text",""]);
 actions['core-sample']=async()=>{const{coreDemo}=await import('./core-demo.js');setDocument(coreDemo(),'Mẫu Luma8');setTool('move');fit();};actionItems.push(['core-sample','Mẫu Luma8 · Layer, alpha, path & chữ','layers','']);
 actions["target-layer"]=()=>{maskMode=false;renderContext();};actions["target-mask"]=()=>{if(!layer()?.mask)throw Error("Lớp chưa có mask.");setTool("move");maskMode=true;renderContext();};
-desktop=createDesktopUI({doc,layer,assets,documentTools,foreground:()=>foreground,setForeground:value=>{foreground=value;$("#foreground").value=value;},commit,addLayer,renderUI,renderLayers,renderHistory,requestRender,runAction,setTool,toast,canvasPoint:pointOnCanvas,selected:()=>selected(doc()),channel:()=>pro.view(),setChannel:v=>pro.setView(v),selectLayer:id=>{documentTools.exitAlpha();documentTools.clearPath();selectLayer(doc(),id);activePanel='properties';maskMode=false;renderUI();requestRender();},openStyles:stylesModal,openFilters:id=>pro.openFilters(id),onLayout:()=>{if(current){positionBoard();requestRender();}}});
+desktop=createDesktopUI({doc,layer,assets,documentTools,previewEdit:()=>{if(layer())beginPreviewEdit(layer().id);},foreground:()=>foreground,setForeground:value=>{foreground=value;$("#foreground").value=value;},commit,addLayer,renderUI,renderLayers,renderHistory,requestRender,runAction,setTool,toast,canvasPoint:pointOnCanvas,selected:()=>selected(doc()),channel:()=>pro.view(),setChannel:v=>pro.setView(v),selectLayer:id=>{documentTools.exitAlpha();documentTools.clearPath();selectLayer(doc(),id);activePanel='properties';maskMode=false;renderUI();requestRender();},openStyles:stylesModal,openFilters:id=>pro.openFilters(id),onLayout:()=>{if(current){positionBoard();requestRender();}}});
 Object.assign(actions,desktop.actions);actionItems.push(...desktop.actionItems);
 const cursorTheme=createCursorTheme({showModal,closeModal,toast});
 Object.assign(actions,cursorTheme.actions);actionItems.push(...cursorTheme.actionItems);
-menuItems.Edit.push('-','cursor-preferences');
+menuItems.Edit.push('-','cursor-preferences','language-preferences');
+actions['language-preferences']=()=>openLanguagePreferences(localization,{showModal,closeModal,toast});actionItems.push(['language-preferences','Language','settings','']);
+actions['cancel-crop']=()=>{if(current)current.crop=null;renderContext();requestOverlay();};
 actions['select-mask']=pro.actions['refine-selection'];actionItems.push(['select-mask','Select & Mask · tinh chỉnh vùng chọn','mask','']);
 menuItems.View=['fit','zoom-100','-','grid','guides','snap','-','view-channels','compare'];
 actions['view-channels']=()=>desktop.layerTab('channels');
 menuItems.Window=['workspace-photo','workspace-design','workspace-retouch','-','panel-color','panel-properties','panel-info','panel-layers','panel-channels','panel-paths','panel-history','-','toggle-dock','workspace-reset'];
 menuItems.Layer=['add-paint','add-text','add-shape','adjustments','-','group','ungroup','duplicate','merge-selected','-','transform','flip-x','flip-y','-','add-mask','clip','styles','filters','-','smart-convert','smart-edit','smart-replace','smart-independent','-','rename-layer','lock','up','down','delete'];
 menuItems.Select=['select-all','deselect','invert-selection','-','select-mask','add-mask','-','cutout-studio','cutout-object','cutout-hair'];
+const traceStudio=createTraceStudio({doc,layer,assets,commit,showModal,closeModal,toast,setTool});
+actions['trace-svg']=()=>traceStudio.open();actionItems.push(['trace-svg','Trace image → SVG paths','pen','']);
+menuItems.Layer.push('-','trace-svg');menuItems.Select.push('-','trace-svg');
 const platform=createPlatformStudio({doc,assets,openFiles,commit,showModal,closeModal,runAction,toast});
 actions['canva-connect']=platform.openCanva;actions['platform-status']=platform.compatibility;
 actionItems.push(['canva-connect','Canva · mở native & retouch','image',''],['platform-status','Windows, PSD, Canva & kiểm chứng GPU','check','']);
 menuItems.File.push('-','canva-connect','platform-status');
 workspace = createWorkspace({ doc, layer, assets, addLayer, commit, setDocument, setTool, fit, toast });
-bootstrap().then(()=>window.lumaDesktop?.ready());
+toolCursors=createToolCursors($('#stage'),()=>({tool:gesture?.kind==='pan'?'hand':tool,space,drawing:!!gesture||!!pro?.isDrawing(),...pro?.cursorInfo(hover)}));updateToolCursor();
+onFontsChanged(()=>{assets.fontRevision++;if(layer()?.type==='text'&&!document.activeElement?.closest('input,select,textarea'))renderProperties();requestRender();});
+void loadSystemFonts();
+bootstrap().then(()=>{window.lumaDesktop?.ready();$('#status-hint').textContent=TOOL_HINTS[tool];updateToolCursor();});
 menuItems.Select.push("-","alpha-save","alpha-load","-","path-from-selection","path-save-layer","path-to-selection");
-const studio = { getDocument: () => clone(doc()), getHistory: () => current ? { index: current.history.index, labels: current.history.entries.map((e) => e.label) } : null, runAction, setTool, addAdjustment, openFiles, workspace, photoLab, pro, advanced, desktop, documentTools, assets, setDocument, openSharedDocument, ready: () => !!current };
+const studio = {traceStudio,localization,getCrop:()=>current?.crop?clone(current.crop):null,getPerformance:()=>({...performanceStats}), getDocument: () => clone(doc()), getHistory: () => current ? { index: current.history.index, labels: current.history.entries.map((e) => e.label) } : null, runAction, setTool, addAdjustment, openFiles, workspace, photoLab, pro, advanced, desktop, documentTools, assets, setDocument, openSharedDocument, ready: () => !!current };
 export {
   studio
 };
