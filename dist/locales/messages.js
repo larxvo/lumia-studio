@@ -1563,5 +1563,9 @@ export const messages=[
  [
   "Smart Object: edit contents or rasterize before painting pixels.",
   "Smart Object: dùng Sửa nội dung hoặc Rasterize trước khi tô pixel."
+ ],
+ [
+  "Unlock contents before updating the retouch.",
+  "Mở khóa nội dung trước khi ghi lại retouch."
  ]
 ];

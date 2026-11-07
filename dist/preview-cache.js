@@ -14,7 +14,7 @@ export function paintPreviewPrefix(out,doc,layers,assets,{scale,mutableIds=[]},p
   const changed=new Set(mutableIds),byId=new Map(doc.layers.map(l=>[l.id,l]));
   for(const id of mutableIds){let l=byId.get(id),seen=new Set();while(l?.parentId&&!seen.has(l.id)){seen.add(l.id);changed.add(l.parentId);l=byId.get(l.parentId);}}
   let split=layers.findIndex(l=>changed.has(l.id));if(split<0)split=layers.length;
-  if(split<layers.length&&layers[split].clipToBelow){while(split>0){split--;if(!layers[split].clipToBelow&&layers[split].type!=='adjustment')break;}}
+  if(split<layers.length&&(layers[split].clipToBelow||layers[split].type==='adjustment')){while(split>0){split--;if(!layers[split].clipToBelow&&layers[split].type!=='adjustment')break;}}
   if(!split){paint(out,layers);return;}
   const prefix=layers.slice(0,split),key=scale+':'+fingerprint(doc,prefix,assets);
   let entry=stores.get(assets);
