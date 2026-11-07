@@ -44,3 +44,15 @@ jobs:
         shell: pwsh
         run: |
           node -e "const assert=require('node:assert/strict');const {enumerateSystemFonts}=require('./desktop/app/system-fonts.cjs');(async()=>{const a=await enumerateSystemFonts();assert.equal(a.source,'system');assert.ok(a.families.length>10);assert.ok(a.families.includes('Arial'));const b=await enumerateSystemFonts();assert.deepEqual(a,b);console.log(JSON.stringify({platform:process.platform,count:a.families.length,sample:a.families.slice(0,12)}));})().catch(e=>{console.error(e);process.exitCode=1;});"
+  locale-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38
+        with:
+          node-version: '24'
+      - run: npm install --prefix .locale-audit --no-save --package-lock=false --ignore-scripts acorn@8.15.0
+      - run: node scripts/audit-locales.mjs
